@@ -1,0 +1,260 @@
+%!TEX root = ../TTK4900-MHT.tex
+
+\newacronym{ais}{AIS}{Automatic Identification System}
+\newacronym{asv}{ASV}{Autonomous Surface Vessel}
+\newacronym{colav}{COLAV}{Collision Avoidance}
+\newacronym{ntnu}{NTNU}{Norwegian University of Science and Technology}
+\newacronym{amos}{AMOS}{Centre for Autonomous Marine Operations and Systems}
+\newacronym{mht}{MHT}{Multi Hypothesis Tracking}
+\newacronym{tomht}{TOMHT}{Track Oriented Multi Hypothesis Tracker}
+\newacronym{homht}{HOMHT}{Hypothesis Oriented Multi Hypothesis Tracker}
+\newacronym{momht}{MOMHT}{Measurement Oriented Multi Hypothesis Tracker}
+\newacronym{nnf}{NNF}{Nearest Neighbour Filter}
+\newacronym{nnsf}{NNSF}{Nearest Neighbour Standard Filter}
+\newacronym{gnnf}{GNNF}{Global Nearest Neighbour Filter}
+\newacronym{pdaf}{PDAF}{Probabilistic Data Association Filter}
+\newacronym{jpdaf}{JPDAF}{Joint Probabilistic Data Association Filter}
+\newacronym{Pd}{$P_D$}{Probability of detection}
+\newacronym{imm}{IMM}{Interacting Multiple Model}
+\newacronym{lp}{LP}{Linear Programming}
+\newacronym{ilp}{ILP}{Integer Linear Programming}
+\newacronym{milp}{MILP}{Mixed Integer Linear Programming}
+\newacronym{grp}{GRP}{Greedy Rounding Procedure}
+\newacronym{dfs}{DFS}{Depth First Search}
+\newacronym{bfs}{BFS}{Breath First Search}
+\newacronym{fov}{FOV}{Field Of View}
+\newacronym{rpm}{RPM}{Rotations Per Minute}
+\newacronym{ssd}{SSD}{Solid State Storage}
+\newacronym{gpu}{GPU}{Graphics Processing Unit}
+\newacronym{cdf}{CDF}{Cumulative Distribution Function}
+\newacronym{cpu}{CPU}{Central Processing Unit}
+\newacronym{map}{MAP}{Maximum A-Posteriori Probability}
+
+
+\newglossaryentry{gurobi}
+{
+	name 		= Gurobi,
+	description = {Gurobi Optimizer by Gurobi Optimization, Inc.}
+}
+
+\newglossaryentry{glpk}
+{
+	name 		= GLPK,
+	description = {GNU Linear Programming Kit}
+}
+
+\newglossaryentry{cbc}
+{
+	name 		= CBC,
+	description = {Coin-or branch and cut, open-source MILP solver}
+}
+
+\newglossaryentry{cplex}
+{
+	name 		= CPLEX,
+	description = {Optimization suite by IBM}
+}
+
+
+\newglossaryentry{coalescence}
+{
+	name 		= Coalescence,
+	text 		= coalescence,
+	description = {Come together to form one whole}
+}
+
+\newglossaryentry{cuda}
+{
+	name 		= CUDA,
+	description = {A compute platform by Nvidia}
+}
+
+\newglossaryentry{cython}
+{
+	name 		= Cython,
+	description = {An optimizing static compiler for Python}
+}
+
+\newglossaryentry{python}
+{
+	name 		= Python,
+	description = {An open-source programming language}
+}
+
+\newglossaryentry{cluster}
+{
+	name 		= Cluster,
+	text 		= cluster,
+	plural 		= clusters,
+	description = {Set of \glspl{target} which share \glspl{measurement}}
+}
+
+\newglossaryentry{track forest}
+{
+	name 		= {Track forest},
+	text 		= {track forest},
+	plural 		= {track forests},
+	description = {A forest of track hypothesis trees}
+}
+
+\newglossaryentry{track hypothesis tree}
+{
+	name 		= {Track hypothesis tree},
+	text 		= {track hypothesis tree},
+	plural 		= {track hypothesis trees},
+	description = {An acyclic graph spanning from the root node of each target where each node is a track hypothesis}
+}
+
+\newglossaryentry{algorithm}
+{
+	name 		= Algorithm,
+	text 		= algorithm,
+	plural 		= algorithms,
+	description = {Step by step operations to be performed}
+}
+
+\newglossaryentry{false alarm}
+{
+	name 		= {False alarm},
+	text 		= {false alarm},
+	plural 		= {false alarms},
+	description = {See Clutter}
+}
+
+\newglossaryentry{tracking}
+{
+	name 		= Tracking,
+	text 		= tracking,
+	description = {The process of initiating, maintaining and terminating tracks from measurements}
+}
+
+\newglossaryentry{pruning}
+{
+	name 		= Pruning,
+	text 		= pruning,
+	description = {Removal of unnecessary branches in a tree}
+}
+
+\newglossaryentry{solver}
+{
+	name 		= Solver,
+	text 		= solver,
+	plural 		= solvers,
+	description = {A program that solves optimization problems}
+}
+
+\newglossaryentry{radar}
+{
+	name 		= Radar,
+	text 		= radar,
+	plural 		= radars,
+	description = {Acronym for Radio Detection And Ranging. A device that uses radio waves to measure distance and bearing to other objects}
+}
+
+\newglossaryentry{scan}
+{
+	name 		= Scan,
+	text		= scan,
+	plural 		= scans,
+	description = {A procedure which measures the entire area of coverage of the system}
+}
+
+\newglossaryentry{measurement}
+{
+	name 		= Measurement,
+	text 		= measurement,
+	plural 		= measurements,
+	description = {A point in the measurement space where something is detected}
+}
+
+\newglossaryentry{score}
+{
+	name 		= Score,
+	text 		= score,
+	plural		= scores,
+	description = {A measure of the goodness of a measurement-to-track association}
+}
+
+\newglossaryentry{no-measurement hypothesis}
+{
+	name 		= {No-measurement hypothesis},
+	text 		= {no-measurement hypothesis},
+	plural		= {no-measurement hypotheses},
+	description = {A self created measurement at the estimated position}
+}
+
+\newglossaryentry{measurement list} %Unused...
+{
+	name 		= {Measurement list},
+	text 		= {measurement list},
+	plural		= {measurements list},
+	description = {A set of measurement which originate from the same scan}
+}
+
+\newglossaryentry{target}
+{
+	name 		= Target,
+	text 		= target,
+	plural		= targets,
+	description = {An actual object which the system is trying to track}
+}
+
+\newglossaryentry{track}
+{
+	name 		= Track,
+	text 		= track,
+	plural 		= tracks,
+	description = {A list of measurement indices, one from each scan, which is believed to originate from the same target}
+}
+
+\newglossaryentry{gate}
+{
+	name 		= Gate,
+	text 		= gate,
+	plural		= gates,
+	description = {An area in which a track expects and approves new measurement to associate with itself}
+}
+
+\newglossaryentry{track hypothesis}
+{
+	name 		= {Track hypothesis},
+	text 		= {track hypothesis},
+	plural		= {track hypotheses},
+	description = {A new measurement inside the gate for an existing track}
+}
+
+\newglossaryentry{measurement nose}
+{
+	name 		= {Measurement noise},
+	text 		= {measurement noise},
+	plural		= {measurements noise},
+	description = {Also called observation noise, which is noise that affects the accuracy of the measurement not the existence. White Gaussian with zero mean and covariance $R$}
+}
+
+\newglossaryentry{system noise}
+{
+	name 		= {System noise},
+	text 		= {system noise}, 
+	description = {Also called process noise, which is noise in the model behaviour. This noise compensates for the uncertainty and non-modelled dynamics of the true system}
+}
+
+\newglossaryentry{clutter}
+{
+	name 		= Clutter,
+	text 		= clutter,
+	description = {Noise in the form of false measurements where the amount is assumed Poisson distributed}
+}
+
+\newglossaryentry{autosea}
+{
+	name = {AUTOSEA},
+	description = {A collaborative research and development project between NTNU AMOS  and the Norwegian maritime industry with aim to attain world leading knowledge in design and verification of control systems for ASVs}
+}
+
+\newglossaryentry{observation}
+{
+	name 		= Observation,
+	text 		= observation,
+	plural 		= observations,
+	description = {See \Gls{measurement}}
+}
