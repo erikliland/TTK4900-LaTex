@@ -1,3 +1,39 @@
 %!TEX root = ../TTK4900-MHT.tex
 
-\section{Introduction}
+\chapter{Introduction}\label{chapter:introduction}
+\section{Motivation}\label{sec:motivation}
+%History
+Automation- and control technology have throughout the history been a crucial part of reliving humans from for instance dangerous, exhaustive, repetitive or boring work. Examples of this is automation and robotics in production facilities, remotely operated vehicles for working and exploring the deep sea and disarming explosives. The level of self control varies from remotely controlled to self sensing and planning without human interaction.
+
+%Early motivation
+The early motivation for automation was probably, and in many situations still are, to improve speed, quality and consistency, which all tends to lead to better economics. With a still decreasing threshold for automating processes, more focus is applied on easing the burden on people, either by combining robotics and humans in the same operation, or fully automate the task. These jobs are typically repetitive, dangerous or both.
+
+%The human problem
+Although humans are capable of both self improving and easily adapting to new tasks, they  will always have good and bad days, performing the same task slightly different or be bored and unfocused. These are all aspects that leads to inconsistency and errors, which may not be a problem in a production environment with quality inspections, though inconvenient, but can be fatal in critical applications. 
+
+%Good examples from today
+There also exists several places where humans and automated system work together to exploit both strengths, for instance in aviation where the pilots are always present in the cockpit, but the autopilot are flying the plane most of the time. This gives the pilots freedom from a very static and repetitive task where a human error could have fatal consequences. This symbiosis is somewhat similar to the workload on the bridge of commercial vessels, where the autopilot steering the ship most of the time, while the crew is setting the course. 
+
+%Narrow down use-case
+For vessels that do very repetitive routes and jobs, like ferries and short domestic cargo transport, the mental fatigue on the crew can be an issue. Because of the need for crew in emergency situations, customer service and ship maintenance, larger ferries would still need crew. They could however been steered by an automated system, which is never tired, bored, intoxicated or distracted in any other way. This is one of many applications for \glspl{asv}.
+
+%Overview of control system
+The sensor and control system needed for safe automation of any vessel is large and complex, and requires several layers of fault barriers to preLloydvent system errors for spreading and the ability to self monitor its own performance. The control system would know its own position and desired position, it would have access to maps to make a route, a \gls{cas} to deviate from its planned route to act in accordance with the rules at sea (\gls{colregs}) based on real-time situation information from the sensors on the vessel.
+
+%Status quo
+For \glspl{asv} to be a viable alternative to human guided ships, the potential savings must be more than marginal, and the control system must be at least as safe as a human operated vessel. The state-of-the-art is not at this point yet, but recent initiatives by large corporations in development in \glspl{asv} and the regulation of a dedicated test area for \glspl{asv} in the Trondheimsfjord are just two examples on the direction this technology is headed.
+
+%Ravnkloa-Veste Kanalkai prosjektet
+The worlds first autonomous ferry might be between Ravnkloa and Vestre kanalkai in Trondheim. The \gls{ntnu} and \gls{dnvgl} are working on a collaborate project to develop a small autonomous battery powered passenger and bike-cycle ferry, as an alternative to a bride over a canal. 
+
+%MUNIN prosjektet
+An indicator of the momentum autonomous surface vessels have is the \gls{munin} project, which is a collaborate project between several European companies and research institutes, partially funded by the European Commission. The project aims at developing and verifying concept of autonomous vessels with remote control from onshore control stations.
+
+% Avslutte med mitt bidrag
+This work is focused on the sensor fusion which generates a real time data stream into the control system, enabling situational awareness and the foundation for predictive \gls{cas} like~\cite{Hagen2017}, which also was a part of the \gls{autosea} project.
+
+\section{Previous work}\label{sec:previous_work}
+This work is based on a pre-master project executed autumn 2016~\cite{Liland_2017}. In this project, it was shown that several off-the-shelf \gls{ilp} \glspl{solver} was capable of solving the data association optimization problem in a singe sensor \gls{tomht}. It also showed that under good to moderate conditions, the performance return when increasing multi-scan window more than a relative low threshold, was very low.
+
+\section{Outline of the thesis}\label{sec:outline_thesis}
+Chapter~\ref{chapter:theoretical_background} provides an introduction to the sensor systems used in this work, as well as some of the different~\gls{mht} variants that exist. Chapter~\ref{chapter:implementation} presents an overview of the complete measurement-to-guidance system and an in-depth explanation of the fused \gls{radar} and \gls{ais} \gls{tomht} tracking system. Chapter~\ref{chapter:results} presents the results of simulated scenarios with different level of clutter, and real scenarios recorded with an \gls{asv} in Trondheim, Norway. A discussion of the results and evaluation of the performance with respect to safety at sea is presented along with a conclusion in Chapter~\ref{chapter:discussion_conclusion}.

@@ -41,7 +41,6 @@
 \usepackage{wrapfig}
 \usepackage{caption}
 \usepackage{subcaption}
-\usepackage{cite}
 \usepackage{amsmath}
 \usepackage{algorithm}
 \usepackage[noend]{algpseudocode}
@@ -56,10 +55,16 @@
 \usepackage[toc, page]{appendix}
 \usepackage[nonumberlist,acronym]{glossaries}
 \usepackage{nomencl}
-\hypersetup{pageanchor=false}
+\usepackage{url}
+\usepackage[style=ieee]{biblatex}
 
 \linespread{1.3}
 \graphicspath{{Figures/}{./Figures/}}
 
+\bibliography{MHTbib}
+
 \makeglossaries{}
 \makenomenclature{}
+
+%Words that shall not be hyphenated
+\hyphenation{Norway}
