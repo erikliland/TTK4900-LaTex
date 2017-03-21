@@ -2,21 +2,36 @@
 
 \chapter{Theoretical Background}\label{chapter:theoretical_background}
 \section{Radar}
-A radar is...
+% \subsection{Overview}
+\gls{radar_acr} is a detection technology that uses radio waves to observe stationary and moving objects. A transmitter sends out radio waves and a receiver is waiting for reflected echo's from objects. The transmitter and receiver will in many situations be in the same location as the transmitter. Depending on frequency, a radar can observe solid objects like air-crafts, ships, terrain, people, road vehicles and weather formations.
+
+% \subsection{History}
+The fist implementation of an instrument that were able to detect the presence of distance metallic objects by radio waves was done by Christian Hülsmeyer in 1904. His invention did not measure the distance to objects, but whether there was an object in the direction of the instrument. The radar as we know it today was introduced in the mid to late 1930's, with world war two triggering a research to improve the still immature technology to be used in military applications. After the war, the technology matured and where put in use in several civil applications, where air traffic control, maritime safety and weather monitoring is the most common.
+
+% \subsection{Principles}
+
 
 \section{AIS}
-\gls{ais} is...
+\gls{ais} is.
 
 \section{Tracking}
+%Intro
+Tracking, in this context, is to follow stationary and moving targets that are observed by a system without included association data. The problem is to know which measurements belong together over time, often refereed to as the data association problem. 
 
-\subsection{Singletarget Tracking}
-Tracking, in this context, is to follow stationary and moving targets that are observed by a system without included association data. The problem is to know which measurements belong together over time, often reffered to as the data association problem.
+%History
+Tracking is a relative new filed of study, originating from the military technology race post 1945, enabled by the development of microprocessors and computers from the 60's. The applications ranged from sonar tracking on both submarines and navy vessels, to air control and missile guidance. This historical background is likely the reason for most published papers using these types of applications as background for testing. In recent years, tracking people and vehicles from visual- and \gls{sar} imagery have also become a topic in the research community~\cite{Carthel2007,Carthel2007a,Coraluppi2000}. There have also been published some research work on usage of tracking for \glspl{asv}~\cite{Wolf2010,Svec2014}, although both are focused on interaction and response to external events.
+
+%Challenge
+There are several factors contributing to the challenge of good tracking;\gls{clutter}, lower than unity \gls{Pd}, multiple detections of the same vessel and wakes. \Gls{clutter} is a term for unwanted measurements or noise, which is inherent in every observation system. For a maritime radar, this can be caused by waves, rain, snow, birds or shore echo. A common assumption on clutter is to assume the amount being Poisson \gls{Pd} is a measure of how persistent the target is in the measurements, and will vary much  between different types of targets. 
+
+\subsection{Single-target Tracking}
+The simplest approach to tracking is single-target tracking, where it is assumed that there are only one target in the measurement area, and any other measurement is regarded as either extra measurements of the target or false measurements, often referred to as \gls{clutter}.
 
 \subsection{Multitarget tracking}
-A subset of tracking is multitarget tracking, where the problem expands to jointly estimate both the number of targets and their trajectories. While a large number of tracking technicues have been developed, the three most used are \gls{jpdaf}, \gls{mht} and \gls{rfs}~\cite{Vo2015}.
+A subset of tracking is multitarget tracking, where the problem expands to jointly estimate both the number of targets and their trajectories. While a large number of tracking techniques have been developed, the three most used are \gls{jpdaf}, \gls{mht} and \gls{rfs}~\cite{Vo2015}.
 
 %JPDAF
-\gls{jpdaf} is a multitarget expansion of \gls{pdaf} which is a singletarget tracking technique. The essense of them both is consider 
+\gls{jpdaf} is a multitarget expansion of \gls{pdaf} which is a single-target tracking technique. The essence of them both is consider 
 
 %RFS
 
