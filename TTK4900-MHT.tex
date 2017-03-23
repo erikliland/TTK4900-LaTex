@@ -20,10 +20,13 @@
 	\setcounter{page}{1}
 
 	\input{tex/problem_description}
+	\clearpage{}
 
 	\input{tex/preface}
+	\clearpage{}
 	
 	\input{tex/abstract}
+	% \clearpage
 	
 	% \input{tex/sammendrag.tex} %Abstract in norwegian
 	
@@ -40,10 +43,11 @@
 	
 	\addcontentsline{toc}{chapter}{Glossary}
 	\printglossary{}
-	\clearpage
+	% \clearpage
 	
 	\addcontentsline{toc}{chapter}{Acronyms}		
-	\printglossary[type=\acronymtype,nopostdot] \clearpage
+	\printglossary[type=\acronymtype,nopostdot]
+	% \clearpage
 
 	% \addcontentsline{toc}{chapter}{Nomenclature}
 	% \printnomenclature[2.5 cm]  \clearpage 

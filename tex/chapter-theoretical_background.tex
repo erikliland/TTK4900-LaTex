@@ -2,17 +2,42 @@
 
 \chapter{Theoretical Background}\label{chapter:theoretical_background}
 \section{Radar}
-% \subsection{Overview}
-\gls{radar_acr} is a detection technology that uses radio waves to observe stationary and moving objects. A transmitter sends out radio waves and a receiver is waiting for reflected echo's from objects. The transmitter and receiver will in many situations be in the same location as the transmitter. Depending on frequency, a radar can observe solid objects like air-crafts, ships, terrain, people, road vehicles and weather formations.
+\subsection{Overview}
+\gls{radar_acr} is a detection technology that uses radio waves to observe stationary and moving objects. A transmitter sends out radio waves and a receiver is waiting for reflected echo's from objects, the time the echo is delayed determines the distance to the object. The transmitter and receiver will in many situations be in the same location as the transmitter, and can be both stationary and mobile. Depending on frequency, a radar can observe solid objects like air-crafts, ships, terrain, people, road vehicles and weather formations.
 
-% \subsection{History}
+\subsection{History}
 The fist implementation of an instrument that were able to detect the presence of distance metallic objects by radio waves was done by Christian Hülsmeyer in 1904. His invention did not measure the distance to objects, but whether there was an object in the direction of the instrument. The radar as we know it today was introduced in the mid to late 1930's, with world war two triggering a research to improve the still immature technology to be used in military applications. After the war, the technology matured and where put in use in several civil applications, where air traffic control, maritime safety and weather monitoring is the most common.
 
-% \subsection{Principles}
-
+\subsection{Principles}
+The electromagnetic waves that a radar emits travels at the speed of light in air and vacuum. It reflects back when there is a change in the density of the medium it is travelling through, which is what happens when radio waves hit targets. Electrically conductive materials tends to be good reflectors, since they have a very different atomic density than air. On the other hand, materials with poor conductivity, and also some magnetic materials, then to absorb radio waves good. Like light, there is many ways an incoming radio wave can be reflected, primarily dependent on the geometry of the target. A corner with angles less than 180$\degree$ will reflect the incoming radio waves directly back to the sender, and is a good thing on targets that want to be visible on a radar. This principle are the basis for radar reflectors commonly used to boos the radar signature on smaller vessels, see Figure~\ref{fig:corner_reflector}.
+\begin{wrapfigure}{R}{0.3\textwidth}
+\centering
+\includegraphics[width=0.25\textwidth]{Corner_reflector}
+\caption{Corner reflector}
+\label{fig:corner_reflector}
+\end{wrapfigure}
+The opposite is used on targets that try to minimize their radar signature, and is the reason why stealth vessels and aircraft are tiled by flat areas. 
+\begin{figure}
+\centering
+\begin{minipage}{0.3\textwidth}
+\includegraphics[width=0.9\textwidth]{USS_Zumwalt}
+\caption{USS Zumwalt}
+\label{fig:uss_zumwalt}
+\end{minipage}\hfill
+\begin{minipage}{0.3\textwidth}
+\includegraphics[width=0.9\textwidth]{KNM_Gnist}
+\caption{KNM Gnist}
+\label{fig:knm_gnist}
+\end{minipage}\hfill
+\begin{minipage}{0.3\textwidth}
+\includegraphics[width=0.9\textwidth]{Figures/F-117_Nighthawk}
+\caption{F177 Nighthawk}
+\label{fig:f177_nighthawk}
+\end{minipage}
+\end{figure}
 
 \section{AIS}
-\gls{ais} is.
+The \acrfull{ais} is a maritime safety and information system primarily designed for collision avoidance in conjunction with \gls{radar}. \gls{ais} transceivers are required on international voyaging vessels over 300 \gls{gross_tonnage}, and on all passenger vessels. \gls{ais} works by broadcasting messages on the \gls{vhf} band
 
 \section{Tracking}
 %Intro
