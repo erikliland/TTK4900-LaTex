@@ -13,7 +13,7 @@
 	\hypersetup{pageanchor=true}
 	%% End dummy-titlepage
 	
-	% \input{tex/dedication.tex}		%% Optional
+	% \input{tex/dedication}		%% Optional
 	% \clearpage
 
 	\pagenumbering{roman}
@@ -28,7 +28,7 @@
 	\input{tex/abstract}
 	% \clearpage
 	
-	% \input{tex/sammendrag.tex} %Abstract in norwegian
+	% \input{tex/sammendrag} %Abstract in norwegian
 	
 	% \glsresetall
 	
@@ -49,15 +49,19 @@
 	\printglossary[type=\acronymtype,nopostdot]
 	% \clearpage
 
-	% \addcontentsline{toc}{chapter}{Nomenclature}
-	% \printnomenclature[2.5 cm]  \clearpage 
+	\addcontentsline{toc}{chapter}{Nomenclature}
+	\printnomenclature[2.5 cm]  \clearpage 
 
 	\pagenumbering{arabic}	
 	\input{tex/chapter-introduction} \clearpage 
 	\input{tex/chapter-theoretical_background} \clearpage 
-	\input{tex/chapter-implementation.tex} \clearpage 
-	\input{tex/chapter-results.tex} \clearpage 
-	\input{tex/chapter-discussion_conclusion.tex} \clearpage  
-	% \input{tex/chapter-appendices.tex} \clearpage
+	\input{tex/chapter-preprocessing} \clearpage
+	\input{tex/chapter-MHT-module} \clearpage 
+	\input{tex/chapter-simulations} \clearpage
+	\input{tex/chapter-results} \clearpage 
+	\input{tex/chapter-discussion} \clearpage  
+	\input{tex/chapter-future-work} \clearpage  
+	\input{tex/chapter-conclusion} \clearpage  
+	% \input{tex/chapter-appendices} \clearpage
 	\printbibliography{}
 \end{document}
