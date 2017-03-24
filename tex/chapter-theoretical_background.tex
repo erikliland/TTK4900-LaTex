@@ -36,14 +36,59 @@ The opposite is used on targets that try to minimize their radar signature, and 
 The \acrfull{ais} is a maritime safety and information system primarily designed for collision avoidance. \gls{ais} works by broadcasting messages on the \gls{vhf} band at irregular intervals with information on the vessels. \gls{ais} transceivers are required on international voyaging vessels over 300 \gls{gross_tonnage}, and on all passenger vessels. \gls{ais} signals are received at bother vessels and shore stations for use in \gls{vts} stations, open tracking databases like \url{www.marinetraffic.com}, fleet-monitoring and search and rescue.
 
 \subsection{History}
-\gls{ais} was designed and developed by technical comities in the \gls{imo}. Its objective was to enhance vessels safety and efficiency by increasing their ability to see and identify other vessels. The main motivation for adopting \gls{ais} was its independence of humans in operation, since it automatically identifies other vessels and displays the information on the navigational system on the bridge. It also enables automatic calculation of \gls{cpa} and time until \gls{cpa}, in which the navigation system could alarm the bridge on incoming traffic on dangerous course. This give the navigator on the bridge more and better information for making decisions, but with the caveat that not all vessels have \gls{ais}. In the 2002 IMO SOLAR Agreement it is specified a requirement that vessels over
+\gls{ais} was designed and developed by technical comities in the \gls{imo}. Its objective was to enhance vessels safety and efficiency by increasing their ability to see and identify other vessels. The main motivation for adopting \gls{ais} was its independence of humans in operation, since it automatically identifies other vessels and displays the information on the navigational system on the bridge. It also enables automatic calculation of \gls{cpa} and time until \gls{cpa}, in which the navigation system could alarm the bridge on incoming traffic on dangerous course. This gives the navigator on the bridge more and better information for making decisions, but with the caveat that not all vessels have \gls{ais}. In the 2002 \gls{imo} \gls{solas} Agreement, it is specified a requirement that vessels over 300 \gls{gross_tonnage} and all passenger vessels must be equipped with class A AIS transceivers. A simpler and cheaper \gls{ais} version named class B aimed at smaller vessels and yachts was published in 2006.
 
 \subsection{Principles}
+\gls{ais} broadcasts both static, dynamic and voyage information with varying intervals based on the vessels speed and status and also on request from some shore stationss. Static, dynamic and voyage messages are listed in Table~\
 
+\begin{table}
+	\begin{tabularx}{\textwidth}{ |X|X| }
+	  \toprule
+	  \multicolumn{2}{|c|}{Static AIS information} \\
+	  \midrule
+	  MMSI & Maritime Mobile Service Identity \\
+	  Call sign & Maritime radio (VHF) call sign \\
+	  Name & Name of vessel \\
+	  IMO Number & Vessel IMO number \\
+	  Length and beam &   \\
+	  Location of positioning fixing antenna &   \\
+	  Height over keel &  \\
+	  \bottomrule
+	\end{tabularx}~\label{tab:static-ais}\caption{Static AIS information}
+
+	\begin{tabularx}{\textwidth}{ |X|X| }
+	  \toprule
+	  \multicolumn{2}{|c|}{Dynamic AIS information} \\
+	  \midrule
+	  Position & In WGS84 frame \\
+	  Position accuracy  & Better or worse that 10 meter \\
+	  Position time stamp & UTC in whole seconds \\
+	  Course over ground (COG) &   \\
+	  Speed over ground  (SOG) &   \\
+	  Heading &   \\
+	  Navigational status &  \\
+	  Rate of turn (ROT) & \\
+	  \bottomrule
+	\end{tabularx}~\label{tab:dynamic-ais}\caption{Dynamic AIS information}
+
+	\begin{tabularx}{\textwidth}{ |X|X| }
+	  \toprule
+	  \multicolumn{2}{|c|}{Voyage AIS information} \\
+	  \midrule
+	  Draught & Depth in water \\
+	  Hazardous cargo  & Type \\
+	  Destination & Name of place \\
+	  Estimated time of arrival (ETA) &   \\
+	  Route plan / waypoints &  \\
+	  Number of persons on board &  \\
+	  \bottomrule
+	\end{tabularx}~\label{tab:vyage-ais}\caption{Voyage AIS information}
+
+\end{table}
 
 \section{Tracking}
 \subsection{Overview}
-Tracking, in this context, is to follow stationary and moving targets that are observed by a system without included association data. The problem is to know which measurements belong together over time, often refereed to as the data association problem. 
+Tracking, in this context, is to follow stationary and moving targets that are observed by a system without included association data. The problem is to know which measurements belong together over time, often refereed to as the data association problem.
 
 \subsection{History}
 Tracking is a relative new filed of study, originating from the military technology race post 1945, enabled by the development of microprocessors and computers from the 60's. The applications ranged from sonar tracking on both submarines and navy vessels, to air control and missile guidance. This historical background is likely the reason for most published papers using these types of applications as background for testing. In recent years, tracking people and vehicles from visual- and \gls{sar} imagery have also become a topic in the research community~\cite{Carthel2007,Carthel2007a,Coraluppi2000}. There have also been published some research work on usage of tracking for \glspl{asv}~\cite{Wolf2010,Svec2014}, although both are focused on interaction and response to external events.
