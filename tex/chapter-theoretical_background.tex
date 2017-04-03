@@ -3,7 +3,22 @@
 \chapter{Theoretical Background}\label{chapter:theoretical_background}
 \section{Radar}
 \subsection{Overview}
-\gls{radar_acr} is a detection technology that uses radio waves to observe stationary and moving objects. A transmitter sends out radio waves and a receiver is waiting for reflected echo's from objects, the time the echo is delayed determines the distance to the object. The transmitter and receiver will in many situations be in the same location as the transmitter, and can be both stationary and mobile. Depending on frequency, a radar can observe solid objects like air-crafts, ships, terrain, people, road vehicles and weather formations.
+\gls{radar_acr} is a detection technology that uses radio waves to observe stationary and moving objects. A transmitter sends out radio waves and a receiver is waiting for reflected echo's from objects, the time the echo is delayed determines the distance to the object. The transmitter and receiver will in many situations be in the same location, can be both stationary and mobile and fixed or rotating orientation. Depending on frequency, a radar can observe solid objects like air-crafts, ships, terrain, road vehicles and less solid objects like people and weather formations.
+\begin{figure}
+\centering
+\begin{minipage}{0.3\textwidth}
+\includegraphics[width=0.9\textwidth]{Fixed_radar_antenna}
+\caption{Fixed radar antenna}\label{fig:fixed_radar_antenna}
+\end{minipage}\hfill
+\begin{minipage}{0.3\textwidth}
+\includegraphics[width=0.9\textwidth]{Rotating_radar_antenna}
+\caption{Rotating radar antenna}\label{fig:rotating_radar_antenna}
+\end{minipage}\hfill
+\begin{minipage}{0.3\textwidth}
+\includegraphics[width=0.9\textwidth]{Maritime_radar_antenna}
+\caption{Maritime radar antenna}\label{fig:maritime_radar_antenna}
+\end{minipage}
+\end{figure}
 
 \subsection{History}
 The fist implementation of an instrument that were able to detect the presence of distance metallic objects by radio waves was done by Christian Hülsmeyer in 1904. His invention did not measure the distance to objects, but whether there was an object in the direction of the instrument. The radar as we know it today was introduced in the mid to late 1930's, with world war two triggering a research to improve the still immature technology to be used in military applications. After the war, the technology matured and where put in use in several civil applications, where air traffic control, maritime safety and weather monitoring is the most common.
@@ -33,16 +48,16 @@ The opposite is used on targets that try to minimize their radar signature, and 
 \end{figure}
 
 \section{AIS}
-The \acrfull{ais} is a maritime safety and information system primarily designed for collision avoidance. \gls{ais} works by broadcasting messages on the \gls{vhf} band at irregular intervals with information on the vessels. \gls{ais} transceivers are required on international voyaging vessels over 300 \gls{gross_tonnage}, and on all passenger vessels. \gls{ais} signals are received at bother vessels and shore stations for use in \gls{vts} stations, open tracking databases like \url{www.marinetraffic.com}, fleet-monitoring and search and rescue.
+The \acrfull{ais} is a maritime safety and information system primarily designed for collision avoidance. \gls{ais} works by broadcasting messages on the \gls{vhf} band at irregular intervals with information on the vessels. \gls{ais} transceivers are required on international voyaging vessels over 300 \gls{gross_tonnage}, and on all passenger vessels. \gls{ais} signals are received at bother vessels and shore stations for use in \gls{vts} stations, open tracking databases like \url{www.marinetraffic.com}, fleet-monitoring and search and rescue. Since the \gls{ais} messages contains position, course and speed, \gls{ais} tracks can be overlaid on a map in a chart plotter or on top of a radar image, giving the operator two sensors to verify each other.
 
 \subsection{History}
-\gls{ais} was designed and developed by technical comities in the \gls{imo}. Its objective was to enhance vessels safety and efficiency by increasing their ability to see and identify other vessels. The main motivation for adopting \gls{ais} was its independence of humans in operation, since it automatically identifies other vessels and displays the information on the navigational system on the bridge. It also enables automatic calculation of \gls{cpa} and time until \gls{cpa}, in which the navigation system could alarm the bridge on incoming traffic on dangerous course. This gives the navigator on the bridge more and better information for making decisions, but with the caveat that not all vessels have \gls{ais}. In the 2002 \gls{imo} \gls{solas} Agreement, it is specified a requirement that vessels over 300 \gls{gross_tonnage} and all passenger vessels must be equipped with class A AIS transceivers. A simpler and cheaper \gls{ais} version named class B aimed at smaller vessels and yachts was published in 2006.
+\gls{ais} was designed and developed by technical comities in the \gls{imo}. Its objective was to enhance vessels safety and efficiency by increasing their ability to see and identify other vessels. The main motivation for adopting \gls{ais} was its independence of humans in operation, since it automatically identifies other vessels and displays the information on the navigational system on the bridge. It also enables automatic calculation of \gls{cpa} and time until \gls{cpa}, in which the navigation system could alarm the bridge on incoming traffic on dangerous course. This gives the navigator on the bridge more and better information for making decisions, but with the caveat that not all vessels have \gls{ais}. In the 2002 \gls{imo} \gls{solas} Agreement, it is specified a requirement that vessels over 300 \gls{gross_tonnage} and all passenger vessels must be equipped with class A AIS transceivers. A simpler and cheaper \gls{ais} version named class B aimed at smaller vessels and yachts was published in 2006. 
 
-\subsection{Principles}
-\gls{ais} broadcasts both static, dynamic and voyage information with varying intervals based on the vessels speed and status and also on request from some shore stationss. Static, dynamic and voyage messages are listed in Table~\
+\subsection{Messages}
+\gls{ais} broadcasts both static, dynamic and voyage information with varying intervals based on the vessels speed and status and also on request from some shore stations. Static, dynamic and voyage messages are listed in Table~\cref{tab:static-ais,tab:dynamic-ais,tab:voyage-ais}
 
 \begin{table}
-	\begin{tabularx}{\textwidth}{ |X|X| }
+	\begin{tabularx}{\textwidth}{XX}
 	  \toprule
 	  \multicolumn{2}{|c|}{Static AIS information} \\
 	  \midrule
@@ -54,9 +69,11 @@ The \acrfull{ais} is a maritime safety and information system primarily designed
 	  Location of positioning fixing antenna &   \\
 	  Height over keel &  \\
 	  \bottomrule
-	\end{tabularx}~\label{tab:static-ais}\caption{Static AIS information}
+	\end{tabularx}~\caption{Static AIS information}\label{tab:static-ais}
 
-	\begin{tabularx}{\textwidth}{ |X|X| }
+	\vspace{1 cm}
+
+	\begin{tabularx}{\textwidth}{XX}
 	  \toprule
 	  \multicolumn{2}{|c|}{Dynamic AIS information} \\
 	  \midrule
@@ -69,9 +86,11 @@ The \acrfull{ais} is a maritime safety and information system primarily designed
 	  Navigational status &  \\
 	  Rate of turn (ROT) & \\
 	  \bottomrule
-	\end{tabularx}~\label{tab:dynamic-ais}\caption{Dynamic AIS information}
+	\end{tabularx}~\caption{Dynamic AIS information}\label{tab:dynamic-ais}
 
-	\begin{tabularx}{\textwidth}{ |X|X| }
+	\vspace{1 cm}
+
+	\begin{tabularx}{\textwidth}{XX}
 	  \toprule
 	  \multicolumn{2}{|c|}{Voyage AIS information} \\
 	  \midrule
@@ -82,9 +101,14 @@ The \acrfull{ais} is a maritime safety and information system primarily designed
 	  Route plan / waypoints &  \\
 	  Number of persons on board &  \\
 	  \bottomrule
-	\end{tabularx}~\label{tab:vyage-ais}\caption{Voyage AIS information}
-
+	\end{tabularx}~\caption{Voyage AIS information}\label{tab:voyage-ais}
 \end{table}
+
+\subsection{Class A}
+Class A \gls{ais} transceivers are designed for \gls{sotdma} transmission, which is a way of reserving transmission time slot for the next broadcast. \gls{sotdma} is based on \gls{tdma}, with an extension allowing for self organizing of time slots compared to \glspl{tdma} dedicated timing manager. Class A transceivers are also required to have build-in display, minimum transmission power of 12.5W, ability to filter targets and communication interfaces like \gls{rs232} and \gls{nmea}.
+
+\subsection{Class B}
+Class B \gls{ais} transmits at lower power, usually 2W and transmits at larger time intervals than Class A. It is not required to have a build-in display and can use both \gls{cstdma} and \gls{sotdma}. \gls{cstdma} is a simpler approach to time division than \gls{sotdma} since it only listen for a single time slot to be unused before it transmits
 
 \section{Tracking}
 \subsection{Overview}
