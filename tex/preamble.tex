@@ -63,7 +63,8 @@
 \usepackage{booktabs}
 \usepackage{tabularx}
 \usepackage{cleveref}
-\usepackage[style=ieee, doi=false, isbn=false]{biblatex}
+\usepackage[style=ieee, doi=false, isbn=false, url=true]{biblatex}
+\usepackage[colorinlistoftodos,prependcaption]{todonotes}
 
 \newcommand{\degsym}{\(^{\circ}\)}
 
@@ -77,3 +78,6 @@
 
 %Words that shall not be hyphenated
 \hyphenation{Norway}
+
+\newcolumntype{b}{X}
+\newcolumntype{s}{>{\hsize=.5\hsize}X}

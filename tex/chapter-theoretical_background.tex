@@ -51,15 +51,15 @@ The opposite is used on targets that try to minimize their radar signature, and 
 The \acrfull{ais} is a maritime safety and information system primarily designed for collision avoidance. \gls{ais} works by broadcasting messages on the \gls{vhf} band at irregular intervals with information on the vessels. \gls{ais} transceivers are required on international voyaging vessels over 300 \gls{gross_tonnage}, and on all passenger vessels. \gls{ais} signals are received at bother vessels and shore stations for use in \gls{vts} stations, open tracking databases like \url{www.marinetraffic.com}, fleet-monitoring and search and rescue. Since the \gls{ais} messages contains position, course and speed, \gls{ais} tracks can be overlaid on a map in a chart plotter or on top of a radar image, giving the operator two sensors to verify each other.
 
 \subsection{History}
-\gls{ais} was designed and developed by technical comities in the \gls{imo}. Its objective was to enhance vessels safety and efficiency by increasing their ability to see and identify other vessels. The main motivation for adopting \gls{ais} was its independence of humans in operation, since it automatically identifies other vessels and displays the information on the navigational system on the bridge. It also enables automatic calculation of \gls{cpa} and time until \gls{cpa}, in which the navigation system could alarm the bridge on incoming traffic on dangerous course. This gives the navigator on the bridge more and better information for making decisions, but with the caveat that not all vessels have \gls{ais}. In the 2002 \gls{imo} \gls{solas} Agreement, it is specified a requirement that vessels over 300 \gls{gross_tonnage} and all passenger vessels must be equipped with class A AIS transceivers. A simpler and cheaper \gls{ais} version named class B aimed at smaller vessels and yachts was published in 2006. 
+\gls{ais} was designed and developed by technical comities in the \gls{imo}. Its objective was to enhance vessels safety and efficiency by increasing their ability to see and identify other vessels. The main motivation for adopting \gls{ais} was its independence of humans in operation, since it automatically identifies other vessels and displays the information on the navigational system on the bridge. It also enables automatic calculation of \gls{cpa} and time until \gls{cpa}, in which the navigation system could alarm the bridge on incoming traffic on dangerous course. This gives the navigator on the bridge more and better information for making decisions, but with the caveat that not all vessels have \gls{ais}. In the 2002 \gls{imo} \gls{solas} Agreement, it is required that vessels over 300 \gls{gross_tonnage} and all passenger vessels must be equipped with class A AIS transceivers. A simpler and cheaper \gls{ais} version named class B aimed at smaller vessels and yachts was published in 2006, followed by a large increase in the amount of non-commercial vessels equipped with \gls{ais}.~\todo[inline]{Need citation}
 
 \subsection{Messages}
-\gls{ais} broadcasts both static, dynamic and voyage information with varying intervals based on the vessels speed and status and also on request from some shore stations. Static, dynamic and voyage messages are listed in Table~\cref{tab:static-ais,tab:dynamic-ais,tab:voyage-ais}
+\gls{ais} broadcasts both static, dynamic and voyage information with varying intervals based on the vessels speed, status and on request from shore stations. Static, dynamic and voyage messages are listed in Table~\cref{tab:static-ais,tab:dynamic-ais,tab:voyage-ais}. When the \gls{ais} standard was developed, the peak traffic situations in the two most densely trafficked waterways, Singapore and Dover Straits, where used to calculate the update frequency for the AIS system. Based on these two locations and a desire to keep the number of reports per minute below 2000, the dynamic information report intervals for class A and B was set as in Table~\ref{tab:classA_reporting_intervals} and~\ref{tab:classB_reporting_intervals} respectively~\cite{IALA2004}. Static information is transmitted every 6 minutes, and on request from \gls{vts} stations. \gls{ais} transceivers are utilizing two reserved \gls{vhf} channels; AIS 1 --- 87B (161.975MHz) and AIS 2 --- 88B (162.025MHz) to improve robustness against interference. An important note is that \gls{ais} transceivers are alternating which channel they are transmitting on, which means that if a receiver is only listening on one channel, the effective update rate halves.
 
 \begin{table}
 	\begin{tabularx}{\textwidth}{XX}
 	  \toprule
-	  \multicolumn{2}{|c|}{Static AIS information} \\
+	  \multicolumn{2}{c}{Static AIS information} \\
 	  \midrule
 	  MMSI & Maritime Mobile Service Identity \\
 	  Call sign & Maritime radio (VHF) call sign \\
@@ -71,11 +71,11 @@ The \acrfull{ais} is a maritime safety and information system primarily designed
 	  \bottomrule
 	\end{tabularx}~\caption{Static AIS information}\label{tab:static-ais}
 
-	\vspace{1 cm}
+	\vspace{0.5 cm}
 
 	\begin{tabularx}{\textwidth}{XX}
 	  \toprule
-	  \multicolumn{2}{|c|}{Dynamic AIS information} \\
+	  \multicolumn{2}{c}{Dynamic AIS information} \\
 	  \midrule
 	  Position & In WGS84 frame \\
 	  Position accuracy  & Better or worse that 10 meter \\
@@ -88,11 +88,11 @@ The \acrfull{ais} is a maritime safety and information system primarily designed
 	  \bottomrule
 	\end{tabularx}~\caption{Dynamic AIS information}\label{tab:dynamic-ais}
 
-	\vspace{1 cm}
+	\vspace{0.5 cm}
 
 	\begin{tabularx}{\textwidth}{XX}
 	  \toprule
-	  \multicolumn{2}{|c|}{Voyage AIS information} \\
+	  \multicolumn{2}{c}{Voyage AIS information} \\
 	  \midrule
 	  Draught & Depth in water \\
 	  Hazardous cargo  & Type \\
@@ -104,11 +104,46 @@ The \acrfull{ais} is a maritime safety and information system primarily designed
 	\end{tabularx}~\caption{Voyage AIS information}\label{tab:voyage-ais}
 \end{table}
 
+\begin{table}
+	\centering
+	\begin{tabularx}{0.8\textwidth}{b s}
+	\toprule
+	Vessels status & Reporting Interval \\
+	\midrule
+	Ship at anchor or moored \newline and not moving faster than 3 knots & 3 minutes \\
+	Ship at anchor or moored \newline and moving faster than 3 knots & 10 seconds \\
+	Ship 0--14 knots & 10 seconds \\
+	Ship 0--14 knots and changing course & 3.3 seconds \\
+	Ship 14--23 knots & 6 seconds  \\
+	Ship 14--23 knots and changing course &  2 seconds \\
+	Ship > 23 knots &  2 seconds \\
+	Ship > 23 knots and changing course & 2 seconds \\
+	\bottomrule
+	\end{tabularx}~\caption{Class A Reporting Intervals}\label{tab:classA_reporting_intervals}
+
+	\vspace{0.5 cm}
+
+	\begin{tabularx}{0.8\textwidth}{b s}
+	\toprule
+	Vessels status & Reporting Interval \\
+	\midrule
+	Ship < 2 knots & 3 minutes \\
+	Ship 2--14 knots & 30 seconds \\
+	Ship 14--23 knots & 15 seconds \\
+	Ship > 23 knots &  5 seconds \\
+	Search and Rescue aircraft & 10 seconds \\
+	Aids to navigation & 3 minutes \\
+	AIS base station & 10 seconds \\
+	\bottomrule
+	\end{tabularx}~\caption{Class B Reporting Intervals}\label{tab:classB_reporting_intervals}
+
+\end{table}
+
 \subsection{Class A}
-Class A \gls{ais} transceivers are designed for \gls{sotdma} transmission, which is a way of reserving transmission time slot for the next broadcast. \gls{sotdma} is based on \gls{tdma}, with an extension allowing for self organizing of time slots compared to \glspl{tdma} dedicated timing manager. Class A transceivers are also required to have build-in display, minimum transmission power of 12.5W, ability to filter targets and communication interfaces like \gls{rs232} and \gls{nmea}.
+Class A \gls{ais} transceivers are designed for \gls{sotdma} transmission, which is a way of reserving transmission time slot for the next broadcast. \gls{sotdma} is based on \gls{tdma}, with an extension allowing for self organizing of time slots compared to \glspl{tdma} dedicated timing manager. This effectively gives class A AIS transmissions priority over Class B equipment which may not have \gls{sotdma}. Class A transceivers are also required to have build-in display, minimum transmission power of 12.5W, ability to filter targets and communication interfaces like \gls{rs232} and \gls{nmea}.
 
 \subsection{Class B}
-Class B \gls{ais} transmits at lower power, usually 2W and transmits at larger time intervals than Class A. It is not required to have a build-in display and can use both \gls{cstdma} and \gls{sotdma}. \gls{cstdma} is a simpler approach to time division than \gls{sotdma} since it only listen for a single time slot to be unused before it transmits
+Class B \gls{ais} transceivers are designed to be simpler and cheaper than Class A transceivers, which is accomplished through less strict requirements for hardware and operation. Class B \gls{ais} transmits at lower power, usually 2W and transmits at larger time intervals than Class A, see Table~\ref{tab:classB_reporting_intervals}. It is not required to have a build-in display and can use both \gls{cstdma} and \gls{sotdma} for transmission. \gls{cstdma} is a simpler approach to time division than \gls{sotdma} since it only listen for a single time slot to be unused before it transmits.
 
 \section{Tracking}
 \subsection{Overview}
@@ -124,7 +159,7 @@ There are several factors contributing to the challenge of good tracking;\gls{cl
 The simplest approach to tracking is single-target tracking, where it is assumed that there are only one target in the measurement area, and any other measurement is regarded as either extra measurements of the target or false measurements, often referred to as \gls{clutter}.
 
 \subsection{Multitarget tracking}
-A subset of tracking is multitarget tracking, where the problem expands to jointly estimate both the number of targets and their trajectories. While a large number of tracking techniques have been developed, the three most used are \gls{jpdaf}, \gls{mht} and \gls{rfs}~\cite{Vo2015}.
+A subset of tracking is multitarget tracking, where the problem expands to jointly estimate both the number of targets and their trajectories~\cite{Vo2015}. While a large number of tracking techniques have been developed, the three most used are \gls{jpdaf}, \gls{mht} and \gls{rfs}~\cite{Vo2015}.
 
 \subsection{JPDAF}
 \gls{jpdaf} is a multitarget expansion of \gls{pdaf} which is a single-target tracking technique. The essence of them both is consider 
