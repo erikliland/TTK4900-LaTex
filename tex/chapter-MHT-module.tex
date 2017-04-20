@@ -9,11 +9,18 @@
 \section{Initiation}
 
 \section{AIS updates}
+Assumptions: the AIS measurements are out-of-order filtered, ID-swap filtered and only the latest update from each target is passed through to the MHT tracking loop. These pre-processing steps are elaborated in ...
+% The number of radar measurements per scan must be lower than the lowest vaild AIS MMSI (100,000,000?). Not a realistic situation.
+All \gls{ais} updates are buffered from when they are received to the next radar scan. This is a design choice, which in some sense synchronize the AIS to the radar. Since the radar period is much smaller than (or in the best case for the AIS, equal to) the AIS transmit period, this will seldom lead to unused AIS measurements. On the other hand, since the radar period is relative short, the amount of time any AIS position will be predicted forward is typically small enough to not cause uncertainty larger than manageable for the algorithm. As will be obvious in Section~\ref{subsec:fusion}, this prediction is only used for the gating sequence.
 
 \section{Hypothesis generation}
 
-\subsection{Fusing two measurements}
-Since both the radar- and \gls{ais} measurement have the same process noise, the fused estimate will have an uncertainty area about 70 percent of the pure radar measurement, whereas the uncertainty would be 50 percent without common process noise~\cite{Bar-Shalom1986}.
+
+
+\subsection{Fusing two measurements}~\label{subsec:fusion}
+Since the AIS position (most likely) originates before the radar measurement, the fusion is carried out in two steps as a sequential update~\cite{Bar-Shalom1995}
+
+% Since both the radar- and \gls{ais} measurement have the same process noise, the fused estimate will have an uncertainty area about 70 percent of the pure radar measurement, whereas the uncertainty would be 50 percent without common process noise~\cite{Bar-Shalom1986}.
 
 \section{Clustering}
 
