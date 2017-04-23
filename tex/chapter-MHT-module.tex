@@ -1,12 +1,55 @@
 %!TEX root = ../TTK4900-MHT.tex
 
 \chapter{MHT Module}\label{chapter:mht-module}
-
-\section{Overview}
+To create a complete tracking \emph{system}, rather than a tracking \emph{algorithm}, it is often necessary  to complement the main algorithm with other support modules. The system or a module if it is a part of a bigger system presented here is an extension of~\cite{Liland_2017}.
+The aim of this chapter is to provide a complete walkthrough of the the track oriented MHT system presented in this thesis. The motion model which is used throughout the entire tracking system when predicting and filtering target behaviour is explained first. Next follows an overview of the algorithm used to initiate new tracks into the MHT algorithm. Followed by the entire MHT tracking algorithm, with all its sub-routines and bookkeeping. 
 
 \section{Motion Model}\label{sec:motion-model}
+A local Cartesian NED-frame will be used throughout this thesis, with the assumption than all input sensors are transformed to this local frame. In real life, when working on an approximated local Cartesian frame is doable as long as the area in question is reasonable small. A global geodetic frame would be preferable, but will yield non-linear motion equations. The state of the targets are modelled with four states
+\begin{equation}
+\V{x} = \begin{bmatrix}
+x & y & \dot{x} & \dot{y}
+\end{bmatrix}^T
+\label{eq:state_vector}
+\end{equation}
+where the \(x\)-axis is pointing east and the \(y\)-axis is pointing north. The two latest states are the velocity in their respective direction. 
 
-\section{Initiation}
+Since modelling the behaviour of any ship under unknown command is next to impossible, a common assumption in tracking theory is to assume that everyone will continue on as usual. Although simple, this model captures the essence of most vessels at sea, and when looking at maritime training, regulation and best-practice, they all dictates that vessels should hold steady course and change course in clear decisive turns. To give room in our model for manoeuvring a white noise is added on the states covariance. 
+\begin{equation}
+\V{x}(k+1) = \M{\Phi} \V{x}(k) + \M{\Gamma} \V{w}(k) \qquad \V{w} \sim \mathcal{N}(0;\M{Q})
+\label{eq:motion_model}
+\end{equation}
+Where 
+\begin{equation}
+\begin{split}
+\M{\Phi} 	&= \text{the state transition matrix} \\
+\M{\Gamma}	&= \text{the disturbance matrix} \\
+\V{w}		&= \text{the process noise}
+\end{split}
+\end{equation}
+and 
+\begin{equation*}
+\M{\Phi} =	\begin{bmatrix}
+1 & 0 & T & 0 \\
+0 & 1 & 0 & T \\
+0 & 0 & 1 & 0 \\
+0 & 0 & 0 & 1 \\
+\end{bmatrix}
+\quad
+\M{Q}	= \sigma_v^2 \begin{bmatrix}
+\frac{T^3}{3} 	& 0 				& \frac{T^2}{2}	& 0 			\\
+0 				& \frac{T^3}{3}  	& 0 			& \frac{T^2}{2}	\\
+\frac{T^2}{2}	& 0					& T				& 0				\\
+0				& \frac{T^2}{2}		& 0				& T				\\
+\end{bmatrix}
+\end{equation*}
+
+
+
+\section{Track Initiation}
+
+\section{MHT Overview}
+
 
 \section{AIS updates}
 Assumptions: the AIS measurements are out-of-order filtered, ID-swap filtered and only the latest update from each target is passed through to the MHT tracking loop. These pre-processing steps are elaborated in ...
@@ -14,7 +57,6 @@ Assumptions: the AIS measurements are out-of-order filtered, ID-swap filtered an
 All \gls{ais} updates are buffered from when they are received to the next radar scan. This is a design choice, which in some sense synchronize the AIS to the radar. Since the radar period is much smaller than (or in the best case for the AIS, equal to) the AIS transmit period, this will seldom lead to unused AIS measurements. On the other hand, since the radar period is relative short, the amount of time any AIS position will be predicted forward is typically small enough to not cause uncertainty larger than manageable for the algorithm. As will be obvious in Section~\ref{subsec:fusion}, this prediction is only used for the gating sequence.
 
 \section{Hypothesis generation}
-
 
 
 \subsection{Fusing two measurements}~\label{subsec:fusion}
