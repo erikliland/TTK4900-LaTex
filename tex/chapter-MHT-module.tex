@@ -47,7 +47,67 @@ and
 
 
 \section{Track Initiation}
-New tracks are initiated with 2/2 \& m/n logic~\cite{Vo2015} on the crumbles after each MHT iteration.
+New tracks are initiated with 2/2 \& m/n logic~\cite{Vo2015} on the unused measurements after each MHT iteration. As the name of the method indicates, this is a two step verification, where the first act as a rough filter and the second as a fine filter. As one of the main assumptions in most tracking systems, the measured radar clutter is assumed uniformly distributed in the measurement area. This assumption is quite rough in the radial measurement space, and worse approximation in Cartesian measurement space, as illustrated in \Cref{fig:clutter_radial,fig:clutter_cartesian}, we still get satisfactory performance from the 2/2\&m/n method.
+\begin{figure}
+\centering
+\begin{minipage}{0.45\textwidth}
+\includegraphics[width=0.9\textwidth]{Figures/clutterRadial.png}
+\caption{Uniform radial clutter}\label{fig:clutter_radial}
+\end{minipage}\hfill
+\begin{minipage}{0.45\textwidth}
+\includegraphics[width=0.9\textwidth]{Figures/clutterCartesian.png}
+\caption{Uniform Cartesian clutter}\label{fig:clutter_cartesian}
+\end{minipage}
+\end{figure}
+The flow of the method is illustrated in Figure~\ref{fig:init_flowchart}, and for better clarity, the algorithm is explained from the last step to the first step, since this is the sequence a newly started initiator will perform its operations.
+\begin{figure}[H]
+\centering
+\includegraphics[width = .9\textwidth]{init_flowchart.pdf}
+\caption{2/2\&m/n flowchart}\label{fig:init_flowchart}
+\end{figure}
+
+
+\subsection{Spawn new initiators}
+All measurement unused by the `Process preliminary tracks' and `Process preliminary tracks' steps will be the basis for new \emph{initiators}, which is measurements that awaits its match in the next scan. 
+
+\subsection{Process initiators}
+When the next scan arrives, all the unused measurements from the `Process preliminary tracks' step will be used as candidates in this step. Since an initiator is only a position and not a full state with velocity, all directions are equally likely, and the only design parameter in this step is maximum speed of targets to be tracked. This parameter sets an outer limit on the circle acting as a gate for the second and confirming measurement. When match an initiator with a second measurement, we want to select the closest, while making the assumption that the two consecutive measurements are the most likely to belong together. In a single target scenario, where this would be to calculate the distance to all the alternative measurements and select the lowest, the association is already done. While in a multitarget scenario, where we \emph{could} select the closest measurement to an initiator, we would have to do this one at a time. This would lead to different result depending the arrangement of the initiators in the programming of this method. A different approach would be to calculate all the different distances for any possible combination, sort the list and assign the shortest distance first followed by the next possible shortest distance. This approach would not be influenced by randomness like the arrangement of the initiators in a programming language, but would not necessarily give the global optimal association regarding the how many initiators that are assigned measurements and their respective distances.
+
+Since we can have situations like exemplified in Figure~\ref{fig:init_gating}, where two initiators have the same measurement inside their gates, and one of them have a second measurement inside its gate.
+\begin{figure}[H]
+\centering
+\includegraphics[width = .8\textwidth]{Figures/init_gating.pdf}
+\caption{Initiator gating example}\label{fig:init_gating}
+\end{figure}
+If using method 1, to sequentially select the best, we have two possible outcomes. If starting with initiator 1, this would be associated with measurement 2, and initiator two would not be associated with any measurements.  If starting with initiator 2, this would be associated with measurement 2, and initiator 1 would be associated with measurement 1. This is clearly not a desired property. If using using method 2, to sequentially select the globally shortest distance, we would first associate initiator 1 with measurement 2, and there would not be any measurements left for initiator 2, leaving this empty.
+
+A third option is to formulate the problem as a global combinatorial problem, and use an `off-the-shelf' solution to solve the problem. We have essentially a matrix with initiators along one axis and measurements along the second axis and the distance between them in their intersections, as in (\ref{eq:init_assignment_matrix}) for our example.
+\begin{equation}\label{eq:init_assignment_matrix}
+\kbordermatrix{
+	 	& M_1 	& M_2 	& M_3	\\
+    I_1 & 3 	& 1 	& 5 	\\
+    I_2 & 7 	& 2 	& 6		\\
+}
+\end{equation}
+The values above the threshold set by the maximum speed multiplied with the time period between the radar scans can be set to infinity to symbolise that this combination is not possible, see (\ref{eq:gated_init_assignment_matrix}) where the gate threshold is 4.
+\begin{equation}\label{eq:gated_init_assignment_matrix}
+\kbordermatrix{
+	 	& M_1 		& M_2 	& M_3		\\
+    I_1 & 3 		& 1 	& \infty 	\\
+    I_2 & \infty 	& 2 	& \infty	\\
+}
+\end{equation}
+If we remove the columns with only infinity, we are removing measurements that cannot be associated under any circumstances, thus reducing the size of the problem, see (\ref{eq:masked_gated_init_assignment_matrix}). With this pre processing, we want to assign each row to a column so that the sum of the selected intersections are minimal. 
+\begin{equation}\label{eq:masked_gated_init_assignment_matrix}
+\kbordermatrix{
+	 	& M_1 		& M_2	\\
+    I_1 & 3 		& 1  	\\
+    I_2 & \infty 	& 2 	\\
+}
+\end{equation}
+We now have formulated our problem in a way that it can be solved by the `Hungarian' algorithm, which will give us the association \(I_1 \rightarrow M_1\) and \(I_2 \rightarrow M_2\)
+
+\subsection{Process preliminary tracks}
 
 \section{MHT Overview}
 \begin{figure}[H]

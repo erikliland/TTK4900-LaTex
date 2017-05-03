@@ -2,3 +2,10 @@
 
 \chapter{Discussion}\label{chapter:discussion}
 Discussion here.
+
+\section{Alternative design / open questions}
+What to do when a track previously associated with an MMSI no longer has new AIS measurements from that MMSI inside its gate? Make an extra hypothesis with a jump? An how to score this?
+
+What to do with unused AIS measurements, i.e. ones that are not previously associated with any tracks and are not within any gate? Use them as measurements in the initialization procedure? Initiate them as new tracks immediately?
+
+In what ways can AIS meta-data improve the radar tracking? From AIS length information, it might be possible to estimate the maximum turning rate for a vessel.
