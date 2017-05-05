@@ -1,11 +1,10 @@
 %!TEX root = ../TTK4900-MHT.tex
 
 \chapter{MHT Module}\label{chapter:mht-module}
-To create a complete tracking \emph{system}, rather than a tracking \emph{algorithm}, it is often necessary  to complement the main algorithm with other support modules. The system or a module if it is a part of a bigger system presented here is an extension of~\cite{Liland_2017}.
-The aim of this chapter is to provide a complete walkthrough of the the track oriented MHT system presented in this thesis. The motion model which is used throughout the entire tracking system when predicting and filtering target behaviour is explained first. Next follows an overview of the algorithm used to initiate new tracks into the MHT algorithm. Followed by the entire MHT tracking algorithm, with all its sub-routines and bookkeeping. 
+To create a complete tracking \emph{system}, rather than a tracking \emph{algorithm}, it is often necessary  to complement the main algorithm with other support modules. The system, or module if it is a part of a bigger system, presented here is an extension of the pre master project~\cite{Liland_2017}. The aim of this chapter is to provide a complete walkthrough of the the track oriented MHT system presented in this thesis. The motion model which is used throughout the entire tracking system when predicting and filtering target behaviour is explained first. Next follows an overview of the algorithm used to initiate new tracks into the MHT algorithm. Followed by the entire MHT tracking algorithm, with all its sub-routines and bookkeeping.
 
 \section{Motion Model}\label{sec:motion-model}
-A local Cartesian NED-frame will be used throughout this thesis, with the assumption than all input sensors are transformed to this local frame. In real life, when working on an approximated local Cartesian frame is doable as long as the area in question is reasonable small. A global geodetic frame would be preferable, but will yield non-linear motion equations. The state of the targets are modelled with four states
+A local Cartesian NED-frame will be used throughout this thesis, with the assumption than all input sensors are transformed to this local frame. In real life, when working on an approximated local Cartesian frame is doable as long as the area in question is reasonable small. A global geodetic frame, like WGS84, would be preferable, but will yield non-linear motion equations. The state of the targets are modelled with four states
 \begin{equation}
 \V{x} = \begin{bmatrix}
 x & y & \dot{x} & \dot{y}
@@ -14,21 +13,23 @@ x & y & \dot{x} & \dot{y}
 \end{equation}
 where the \(x\)-axis is pointing east and the \(y\)-axis is pointing north. The two latest states are the velocity in their respective direction. 
 
-Since modelling the behaviour of any ship under unknown command is next to impossible, a common assumption in tracking theory is to assume that everyone will continue on as usual. Although simple, this model captures the essence of most vessels at sea, and when looking at maritime training, regulation and best-practice, they all dictates that vessels should hold steady course and change course in clear decisive turns. To give room in our model for manoeuvring a white noise is added on the states covariance. 
-\begin{equation}
-\V{x}(k+1) = \M{\Phi} \V{x}(k) + \M{\Gamma} \V{w}(k) \qquad \V{w} \sim \mathcal{N}(0;\M{Q})
-\label{eq:motion_model}
+Since modelling the behaviour of any ship under unknown command is next to impossible, a common assumption in tracking theory is to assume that every target will continue on as usual. Although simple, this model captures the essence of most vessels at sea, and when looking at maritime training, regulation and best-practice, they all dictates that vessels should hold steady course and change course in clear decisive turns. To give room in our model for manoeuvring, the process noise covariance is increased according to the assumed manoeuvring capabilities of the vessels. This could be set as a fixed value for all targets, as done in this work, or estimated based on the history of the track.
+
+This give raise for the linear dynamic model (\ref{eq:motion_model})
+\begin{equation}\label{eq:motion_model}
+\V{x}(k+1) = \M{\Phi} \V{x}(k) + \V{w}(k) \qquad \V{w} \sim \mathcal{N}(0;\M{Q})
 \end{equation}
-Where 
-\begin{equation}
+where 
+\begin{equation*}
 \begin{split}
 \M{\Phi} 	&= \text{the state transition matrix} \\
-\M{\Gamma}	&= \text{the disturbance matrix} \\
-\V{w}		&= \text{the process noise}
+\V{w}		&= \text{the process noise} \\
+k 			&= \text{time index} \\
+\M{Q}		&= \text{the system covariance matrix}
 \end{split}
-\end{equation}
-and 
-\begin{equation*}
+\end{equation*}
+and the matrices describing our constant-velocity model is (\ref{eq:model_matrices}).
+\begin{equation}\label{eq:model_matrices}
 \M{\Phi} =	\begin{bmatrix}
 1 & 0 & T & 0 \\
 0 & 1 & 0 & T \\
@@ -42,12 +43,12 @@ and
 \frac{T^2}{2}	& 0					& T				& 0				\\
 0				& \frac{T^2}{2}		& 0				& T				\\
 \end{bmatrix}
-\end{equation*}
-
-
+\end{equation}
 
 \section{Track Initiation}
-New tracks are initiated with 2/2 \& m/n logic~\cite{Vo2015} on the unused measurements after each MHT iteration. As the name of the method indicates, this is a two step verification, where the first act as a rough filter and the second as a fine filter. As one of the main assumptions in most tracking systems, the measured radar clutter is assumed uniformly distributed in the measurement area. This assumption is quite rough in the radial measurement space, and worse approximation in Cartesian measurement space, as illustrated in \Cref{fig:clutter_radial,fig:clutter_cartesian}, we still get satisfactory performance from the 2/2\&m/n method.
+In comparison with \gls{homht} who treats every measurement as a potential new track since its hypotheses are essentially different ways of organizing its measurements into tracks, which are repeated for every iteration. \Gls{tomht} does not have any built-in initialization of tracks since it essentially only maintains an already existing track with track splitting and measurement-to-track association for every iteration. To remedy this lack, we need an algorithm that can find consistent and predictable patterns in an assumed uniformly distributed measurement space of clutter. 
+
+In this work, new tracks are initiated with 2/2 \& m/n logic~\cite{Vo2015} on the unused measurements after each MHT iteration. As the name of the method indicates, this is a two step verification, where the first act as a rough filter and the second as a fine filter. As one of the main assumptions in most tracking systems, the measured radar clutter is assumed uniformly distributed in the measurement area. This assumption is quite rough in the radial measurement space, and even worse approximation in Cartesian measurement space, as illustrated in \Cref{fig:clutter_radial,fig:clutter_cartesian}.  Although far from perfect, tests shows that we still get satisfactory performance from the 2/2\&m/n method.
 \begin{figure}
 \centering
 \begin{minipage}{0.45\textwidth}
@@ -68,18 +69,18 @@ The flow of the method is illustrated in Figure~\ref{fig:init_flowchart}, and fo
 
 
 \subsection{Spawn new initiators}
-All measurement unused by the `Process preliminary tracks' and `Process preliminary tracks' steps will be the basis for new \emph{initiators}, which is measurements that awaits its match in the next scan. 
+All measurement unused by the `Process preliminary tracks' and `Process preliminary tracks' steps will be the basis for new \emph{initiators}. An initiator is a measurement that that awaits its match in the next scan. The idea is that uniformly distributed clutter will not (often) reappear at approximately the same location two times in a row, effectively filtering out most of the clutter.
 
 \subsection{Process initiators}
-When the next scan arrives, all the unused measurements from the `Process preliminary tracks' step will be used as candidates in this step. Since an initiator is only a position and not a full state with velocity, all directions are equally likely, and the only design parameter in this step is maximum speed of targets to be tracked. This parameter sets an outer limit on the circle acting as a gate for the second and confirming measurement. When match an initiator with a second measurement, we want to select the closest, while making the assumption that the two consecutive measurements are the most likely to belong together. In a single target scenario, where this would be to calculate the distance to all the alternative measurements and select the lowest, the association is already done. While in a multitarget scenario, where we \emph{could} select the closest measurement to an initiator, we would have to do this one at a time. This would lead to different result depending the arrangement of the initiators in the programming of this method. A different approach would be to calculate all the different distances for any possible combination, sort the list and assign the shortest distance first followed by the next possible shortest distance. This approach would not be influenced by randomness like the arrangement of the initiators in a programming language, but would not necessarily give the global optimal association regarding the how many initiators that are assigned measurements and their respective distances.
+When the next scan arrives, all the unused measurements from the `Process preliminary tracks' step will be used as candidates in this step. Since an initiator is only a position and not a full state with velocity, all directions are equally likely, and the only design parameter in this step is maximum speed of targets to be tracked. This parameter sets an outer limit on the circle acting as a gate for the second and confirming measurement. When matching initiators with a second measurement, we want to select the closest measurement, making the assumption that the two consecutive measurements are the most likely to belong together. In a single target scenario, where this would be to calculate the distance to all the alternative measurements and select the lowest, the association is already done. While in a multitarget scenario, we \emph{could} select the closest measurement to any initiator, bur we would have to do this one initiator at a time. This would lead to different results depending on the arrangement of the initiators in the programming of this method. A different approach would be to calculate all the different distances for any possible combination of initiators and measurements, sort the list, and assign the distances from the shortest to the longest possible distances. This approach would not be influenced by randomness like the arrangement of the initiators in a programming language, but would not necessarily give the global optimal association regarding the how many initiators that are assigned measurements and their respective distances.
 
-Since we can have situations like exemplified in Figure~\ref{fig:init_gating}, where two initiators have the same measurement inside their gates, and one of them have a second measurement inside its gate.
+Since we can have situations like exemplified in Figure~\ref{fig:init_gating}, where two initiators have the same measurement inside their gates, and one of them have a second measurement inside its gate, we need to take the global consequence of any assignment into consideration.
 \begin{figure}[H]
 \centering
 \includegraphics[width = .8\textwidth]{Figures/init_gating.pdf}
 \caption{Initiator gating example}\label{fig:init_gating}
 \end{figure}
-If using method 1, to sequentially select the best, we have two possible outcomes. If starting with initiator 1, this would be associated with measurement 2, and initiator two would not be associated with any measurements.  If starting with initiator 2, this would be associated with measurement 2, and initiator 1 would be associated with measurement 1. This is clearly not a desired property. If using using method 2, to sequentially select the globally shortest distance, we would first associate initiator 1 with measurement 2, and there would not be any measurements left for initiator 2, leaving this empty.
+If using method 1; to sequentially select the best, we have two possible outcomes. When starting with initiator 1, this initiator would be associated with measurement 2, and initiator 2 would not be associated with any measurements. On the other hand, starting with initiator 2 would lead to this initiator being associated with measurement 2, and initiator 1 would be associated with measurement 1. This randomness in outcome based on which initiator the algorithm starts with is clearly not a desired property. If using using method 2; to sequentially select the globally shortest distance, we would first associate initiator 1 with measurement 2, and there would not be any measurements left for initiator 2, leaving this empty.
 
 A third option is to formulate the problem as a global combinatorial problem, and use an `off-the-shelf' solution to solve the problem. We have essentially a matrix with initiators along one axis and measurements along the second axis and the distance between them in their intersections, as in (\ref{eq:init_assignment_matrix}) for our example.
 \begin{equation}\label{eq:init_assignment_matrix}
