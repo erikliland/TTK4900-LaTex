@@ -24,15 +24,32 @@ When testing the tracking performance, it is desirable to remove the variable of
 \V{\lambda_\phi} &= \begin{bmatrix} 0 & 2\cdot10^{-6} & 4\cdot10^{-6} \end{bmatrix}
 \end{split}
 \end{equation}
-Both initialization- and tracking performance is averaged over a set of 50 Monte Carlo simulations with differently seeded clutter- and detections points.
+Since the targets are initialized perfectly in every situation, we are interested in how good our system is able to \emph{keep} on the tracks. We measure this by means of the Euclidean distance between the estimated and true track (\ref{eq:euclidian_distance_vector}).
+\begin{equation}
+	\Delta P = \| \V{p}_{track}-\V{p}_{target} \|_2
+\label{eq:euclidian_distance_vector}
+\end{equation}
+The track is considered correct if \(\Delta P \leq \varepsilon_p\) for all t after initial convergence. If a track is deviating more than the threshold and never return within the threshold again, it is considered lost at the time-step when it exceeded the threshold. If the track should converge after exceeding the threshold, it is considered restored at the time-step it is returning within the limit. The second metric is how close the estimated track is to the true track on average. This is measured in \gls{rms} error of the entire track.
 
 \section{Scenario}\label{sec:scenario}
-All simulations in this work is based on a generated scenario, as shown in Figure~\ref{fig:test_scenario}, with black dots marking the initial time and position. The radar range is 5500 meter (~3 \glspl{nm_acr}), which gives an area of surveillance of approximately 95 square km. The scenario contains 16 targets, which all starts inside the observable area of the radar. The scenario contains a mixture of fast and slow moving vessels, some with sharp turns and some almost at stand still. 
+All simulations in this work is based on a generated scenario, as shown in Figure~\ref{fig:test_scenario}, with black dots marking the initial time and position. The radar range is 5500 meter (~3 \glspl{nm_acr}), which gives an area of surveillance of approximately 95 square km. The scenario contains 16 targets, which all starts inside the observable area of the radar. The scenario contains a mixture of fast and slow moving vessels, some with sharp turns and some almost at stand still. Table~\ref{tab:init_states} shows the initial states of all targets, and the true path is generated once from these initial values.
 \begin{figure}[H]
 \centering
-\includegraphics[width = .8\textwidth]{Figures/scenarioTruth.pdf}
+\includegraphics[width = .9\textwidth]{Figures/plots/ScenarioTruth.pdf}
 \caption{True tracks}\label{fig:test_scenario}
 \end{figure}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{c c c c c}
+\bfseries Target & \bfseries North & \bfseries East & \bfseries North speed & \bfseries East speed \\ 
+\toprule
+\csvreader[head to column names,respect percent=true]{{Figures/plots/Scenario_Initial_State.csv}}{}
+{\T{} & \NP{} & \EP{} & \NS{} & \ES{} \\}
+\end{tabular}
+\caption{Initial states}\label{tab:init_states}
+\end{table}
+
 From this base scenario, five scenarios where generated with different AIS configuration on the vessels, see Table~\ref{tab:ais_scenarios}. The first scenario represent the baseline with only radar information available, whereas the rest have some level of AIS information. Scenario 2 adds three class B AIS transmitters, and is representing a situation where all the targets are smaller vessels with some voluntarily installed AIS transceivers. In scenario 3, all vessels have AIS class B installed. This scenario represents a best case situation regarding yacht and leisure vessels from an autonomous anti collision perspective and is only realistic if AIS class B where to be mandatory for these vessel classes. Scenario 4 is the same as scenario 2, with the difference that the vessels have class A transmitters in stead of class B. This gives them higher and smarter rate of transmission, which in theory should improve tracking under challenging conditions. This scenario can be viewed as a few commercial vessels travelling in between a large group of yachts. The last scenario, where all targets are equipped with class A transmitters is the ultimate situation for any fusion tracking system. This case would be realistic in a crowded professional working area, for instance harbours, fishing areas and off-shore installations. 
 \begin{table}
 \centering
@@ -49,18 +66,18 @@ From this base scenario, five scenarios where generated with different AIS confi
 	  4 	& --- 	& --- 	& B 	& --- 	& A 	\\
 	  5 	& --- 	& --- 	& B 	& --- 	& A 	\\
 	  6 	& --- 	& --- 	& B 	& --- 	& A 	\\
-	  6 	& --- 	& --- 	& B 	& --- 	& A 	\\
-	  6 	& --- 	& --- 	& B 	& --- 	& A 	\\
 	  7 	& --- 	& --- 	& B 	& --- 	& A 	\\
 	  8 	& --- 	& --- 	& B 	& --- 	& A 	\\
-	  9 	& ---	& B 	& B 	& A 	& A 	\\
+	  9 	& --- 	& --- 	& B 	& --- 	& A 	\\
 	  10 	& --- 	& --- 	& B 	& --- 	& A 	\\
-	  11 	& --- 	& --- 	& B 	& --- 	& A 	\\
-	  12 	& ---	& B 	& B 	& A 	& A 	\\
+	  11	& ---	& B 	& B 	& A 	& A 	\\
+	  12 	& --- 	& --- 	& B 	& --- 	& A 	\\
 	  13 	& --- 	& --- 	& B 	& --- 	& A 	\\
+	  14 	& ---	& B 	& B 	& A 	& A 	\\
+	  15 	& --- 	& --- 	& B 	& --- 	& A 	\\
 	  \bottomrule
 	\end{tabularx}~\caption{AIS scenario configuration}\label{tab:ais_scenarios}
 \end{table}
 
 \section{Simulation}
-For each simulation
+Both initialization- and tracking performance is averaged over a set of 50 Monte Carlo simulations with differently seeded clutter- and detections points. All simulations are done with a sampling interval at 2.5 seconds (24 \gls{rpm}), which is the most common rotation speed on a coastal maritime radar. Each of the 108 initialization variations and 180 track performance simulations where run 50 times with different seeded clutter and misdetections on a dual Intel i7--6700 processor and \gls{ssd} storage. 
