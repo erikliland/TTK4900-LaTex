@@ -168,6 +168,12 @@ To get a more accurate score when summing two measurements, we are first predict
 \subsection{Pure AIS hypotheses}\label{subsec:pure_ais_hypotheses}
 If no radar measurements are present in the gate while there are AIS measurements present inside the gate, pure AIS hypotheses are created. This can be the situation when a target is broadcasting an AIS message, but is either in radar shadow or is not detected by the radar for any reason. These hypotheses are not created when one or more radar measurements are available, based on the assumption that if a radar measurement is present, the difference between a fused hypothesis and a pure AIS hypothesis is quite small since the AIS measurement covariance typically will be much smaller than the radar measurement covariance, leading to a fused state very close to the AIS measurement.
 
+\begin{figure}[H]
+\centering
+\includegraphics[height = .3\textheight]{Figures/Hypotheses_when_turning.PNG}
+\caption{Hypotheses when turning}\label{fig:hypotheses_when_turning}
+\end{figure}
+
 \section{Scoring}
 The scoring used in this tracking system is based on a dimensionless score function by Bar-Shalom~\cite{Bar-Shalom2007}. His paper discusses the issue of scoring measurement-to-track associations and comparing scores based on different numbers of measurement and measurement dimensions. He proposes a dimensionless \emph{likelihood ratio}, which is the \gls{pdf} of a measurement having originating from the track, to the \gls{pdf} of it not originating from the track.~\todo[inline]{Fill in the main steps in the derivation}
 
@@ -265,3 +271,10 @@ There are a lot of off-the-shelf \gls{ilp} and \gls{milp} solvers on the marked,
 \section{N-Scan pruning}
 
 \section{Track termination}
+
+\section{Track smoothing}
+\begin{figure}[H]
+\centering
+\includegraphics[width = .9\textwidth]{Figures/track_smoothing.png}
+\caption{Track smoothing}\label{fig:track_smoothing}
+\end{figure}
