@@ -1,5 +1,4 @@
 %!TEX root = ../TTK4900-MHT.tex
-
 \chapter{Results}\label{chapter:results}
 \section{Testing scheme}
 The performance evaluation of the MHT tracking system is tedious in that it is necessary to test very many different situations to get a good understanding of how the system is performing. The two largest factors contributing to the difficulty is the random nature of the clutter and lost detections. It is also desirable to evaluate the initialization and tracking performance under both varying environmental (external) conditions and tuning (internal) setting. We want good tracking of targets with low probability of detections in cluttered environment, and secondly it must be able to do this within the time frame of the radar rotation period. The initialization module must be able to detect targets with probability of detection lower than unity without initializing too may false tracks into the MHT algorithm. The testing is separated into two parts; initialization and tracking.
@@ -22,7 +21,8 @@ When testing the tracking performance, it is desirable to remove the variable of
 \V{P_D} &= \begin{bmatrix} 1.0 & 0.8 & 0.6 \end{bmatrix} \\
 \V{N} &= \begin{bmatrix} 1 & 3 & 6 & 9 \end{bmatrix} \\
 \V{\lambda_\phi} &= \begin{bmatrix} 0 & 2\cdot10^{-6} & 4\cdot10^{-6} \end{bmatrix}
-\end{split}
+% \end{split}
+
 \end{equation}
 Since the targets are initialized perfectly in every situation, we are interested in how good our system is able to \emph{keep} on the tracks. We measure this by means of the Euclidean distance between the estimated and true track (\ref{eq:euclidian_distance_vector}).
 \begin{equation}
@@ -30,6 +30,12 @@ Since the targets are initialized perfectly in every situation, we are intereste
 \label{eq:euclidian_distance_vector}
 \end{equation}
 The track is considered correct if \(\Delta P \leq \varepsilon_p\) for all t after initial convergence. If a track is deviating more than the threshold and never return within the threshold again, it is considered lost at the time-step when it exceeded the threshold. If the track should converge after exceeding the threshold, it is considered restored at the time-step it is returning within the limit. The second metric is how close the estimated track is to the true track on average. This is measured in \gls{rms} error of the entire track
+
+\begin{figure}[H]
+\centering
+\includegraphics[width = .8\textwidth]{Figures/track_percentage_illustration.pdf}
+\caption{Tracking percentage illustration}\label{fig:track_percentage}
+\end{figure}
 
 \section{Scenario}\label{sec:scenario}
 All simulations in this work is based on a generated scenario, as shown in Figure~\ref{fig:test_scenario}, with black dots marking the initial time and position. The radar range is 5500 meter (~3 \glspl{nm_acr}), which gives an area of surveillance of approximately 95 square km. The scenario contains 16 targets, which all starts inside the observable area of the radar. The scenario contains a mixture of fast and slow moving vessels, some with sharp turns and some almost at stand still. Table~\ref{tab:init_states} shows the initial states of all targets, and the true path is generated once from these initial values.

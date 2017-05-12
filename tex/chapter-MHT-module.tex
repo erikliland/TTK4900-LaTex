@@ -1,34 +1,71 @@
 %!TEX root = ../TTK4900-MHT.tex
 
 \chapter{MHT Module}\label{chapter:mht-module}
-To create a complete tracking \emph{system}, rather than a tracking \emph{algorithm}, it is often necessary  to complement the main algorithm with other support modules. The system, or module if it is a part of a bigger system, presented here is an extension of the pre master project~\cite{Liland_2017}. The aim of this chapter is to provide a complete walkthrough of the the track oriented MHT system presented in this thesis. The motion model which is used throughout the entire tracking system when predicting and filtering target behaviour is explained first. Next follows an overview of the algorithm used to initiate new tracks into the MHT algorithm. Followed by the entire MHT tracking algorithm, with all its sub-routines and bookkeeping.
+To create a complete tracking \emph{system}, rather than a tracking \emph{algorithm}, it is often necessary  to complement the main algorithm with support modules. The system, or module if it is a part of a bigger system, presented here is an extension of the pre master project~\cite{Liland_2017}. The aim of this chapter is to provide a complete walkthrough of the the track oriented MHT system presented in this thesis. The motion model which is used throughout the entire tracking system when predicting and filtering target behaviour is presented first. Next follows an overview of the algorithm used to initiate new tracks into the MHT algorithm. Followed by the entire MHT tracking algorithm with all its sub-routines.
 
 \section{Motion Model}\label{sec:motion-model}
-A local Cartesian NED-frame will be used throughout this thesis, with the assumption than all input sensors are transformed to this local frame. In real life, when working on an approximated local Cartesian frame is doable as long as the area in question is reasonable small. A global geodetic frame, like WGS84, would be preferable, but will yield non-linear motion equations. The state of the targets are modelled with four states
+The radar measurements is by nature in polar frame, and the target motion model is best described in a Cartesian frame. The most usual solution is to convert the radar measurements to a Cartesian frame, and to avoid biased and optimistic covariances of the converted measurements, a procedure which compensates for these errors, (\ref{eq:debiased_coordinate_conversion}) and (\ref{eq:average_true_converted_measurement_covariace}),  should be used in stead of the standard conversion (\ref{eq:standard_coordinate_conversion}) and (\ref{eq:linearized_converted_measurement_covariace})~\cite{Bar-Shalom1995}.
+\begin{equation}\label{eq:debiased_coordinate_conversion}
+\begin{split}
+\begin{bmatrix} x \\ y \end{bmatrix} &= \begin{bmatrix} r_m \cos \theta_m  \\ r_m \sin \theta_m  \end{bmatrix} - \mu_a \\
+\mu_a & \triangleq 
+\begin{bmatrix}
+	E \lbrack \tilde{x}|r_m,\theta_m \rbrack \\ 
+	E \lbrack \tilde{y}|r_m,\theta_m \rbrack 
+\end{bmatrix} 
+= 
+\begin{bmatrix}
+	r_m \cos \theta_m (e^{-\sigma^2_\theta}) - e^{-\sigma^2_\theta / 2} \\ 
+	r_m \sin \theta_m (e^{-\sigma^2_\theta}) - e^{-\sigma^2_\theta / 2}
+\end{bmatrix} 
+\end{split}
+\end{equation}
+
+\begin{equation}\label{eq:average_true_converted_measurement_covariace}
+\begin{split}
+R_a^{11} & \triangleq r_m^2 e^{-2\sigma_\theta^2} \lbrack \cos^2\theta_m(\cosh 2\sigma_\theta^2-\cosh \sigma_\theta^2) + \sin^2\theta_m (\sinh 2\sigma_\theta^2 - \sinh \sigma_\theta^2) \rbrack \\
+& + \sigma_r^2 e^{-2\sigma_\theta^2} \lbrack \cos^2 \theta_m (2\cosh 2\sigma_\theta^2 - \cosh\sigma_\theta^2) + \sin^2 \theta_m (2\sinh 2\sigma_\theta^2 - \sinh \sigma_\theta^2) \rbrack \\
+R_a^{22} & \triangleq r_m^2 e^{-2\sigma_\theta^2} \lbrack \sin^2\theta_m(\cosh 2\sigma_\theta^2-\cosh \sigma_\theta^2) + \cos^2\theta_m (\sinh 2\sigma_\theta^2 - \sinh \sigma_\theta^2) \rbrack \\
+& + \sigma_r^2 e^{-2\sigma_\theta^2} \lbrack \sin^2 \theta_m (2\cosh 2\sigma_\theta^2 - \cosh\sigma_\theta^2) + \cos^2 \theta_m (2\sinh 2\sigma_\theta^2 - \sinh \sigma_\theta^2) \rbrack \\
+R_a^{12} & \triangleq \sin \theta_m \cos \theta_m e^{-4\sigma_\theta^2} \lbrack \sigma_r^2 + (r_m^2 + \sigma_r^2)(1-e^{\sigma_\theta^2}) \rbrack
+\end{split}
+\end{equation}
+
+\begin{equation}\label{eq:standard_coordinate_conversion}
+x = r_m \cos \theta_m \qquad y = r_m \sin \theta_m
+\end{equation}
+
+\begin{equation}\label{eq:linearized_converted_measurement_covariace}
+\begin{split}
+R_L^{11} & \triangleq r_m^2 \sigma_\theta^2 \sin^2\theta_m + \sigma_r^2 \cos^2 \theta_m \\
+R_L^{22} & \triangleq r_m^2 \sigma_\theta^2 \cos^2\theta_m + \sigma_r^2 \sin^2 \theta_m \\
+R_L^{12} & \triangleq (\sigma_r^2 - r_m^2 \sigma_\theta^2) \sin \theta_m \cos \theta_m \\
+\end{split}
+\end{equation}
+
+\begin{equation*}
+\begin{split}
+r_m 			&= \text{measured range} \\
+\theta_m		&= \text{measured bearing} \\
+\sigma_r 		&= \text{range measurement standard deviation} \\
+\sigma_\theta 	&= \text{bearing measurement standard deviation} \\
+\M{R_a} 		&= \text{average true converted measurement covariance} \\
+\M{R_L} 		&= \text{linearised converted measurement covariance} \\
+\end{split}
+\end{equation*}
+
+A local Cartesian NED-frame will be used throughout this thesis, with the assumption than all input sensors are transformed to this local frame. In real life, when working on an approximated local Cartesian frame is doable as long as the area in question is reasonable small. A global geodetic frame, like WGS84, would be preferable, but will yield non-linear motion equations. The state of the targets are modelled with four states (\ref{eq:state_vector}) where the \(x\)-axis is pointing east and the \(y\)-axis is pointing north. The two latest states are their velocities in their respective direction.
 \begin{equation}
 \V{x} = \begin{bmatrix}
 x & y & \dot{x} & \dot{y}
 \end{bmatrix}^T
 \label{eq:state_vector}
 \end{equation}
-where the \(x\)-axis is pointing east and the \(y\)-axis is pointing north. The two latest states are the velocity in their respective direction. 
 
-Since modelling the behaviour of any ship under unknown command is next to impossible, a common assumption in tracking theory is to assume that every target will continue on as usual. Although simple, this model captures the essence of most vessels at sea, and when looking at maritime training, regulation and best-practice, they all dictates that vessels should hold steady course and change course in clear decisive turns. To give room in our model for manoeuvring, the process noise covariance is increased according to the assumed manoeuvring capabilities of the vessels. This could be set as a fixed value for all targets, as done in this work, or estimated based on the history of the track.
-
-This give raise for the linear dynamic model (\ref{eq:motion_model})
+Since modelling the behaviour of any ship under unknown command is next to impossible, a common assumption in tracking theory is that every target will continue on as usual, more precisely that their velocity is constant. Although simple, this model captures the essence of most vessels at sea, and when looking at maritime training~\cite{Allen2005} and regulation~\cite{IMO1972}, they both dictates that vessels should hold steady course and change course in clear decisive turns. To give room in our model for manoeuvring, the process noise covariance is set according to the assumed manoeuvring capabilities of the vessels. This could be set as a fixed value for all targets, as done in this work, or estimated based on the history of the track or AIS information. This behaviour can be modelled as a linear time invariant system  with time evolution (\ref{eq:motion_model}), and transition and covariance matrix (\ref{eq:model_matrices}).
 \begin{equation}\label{eq:motion_model}
 \V{x}(k+1) = \M{\Phi} \V{x}(k) + \V{w}(k) \qquad \V{w} \sim \mathcal{N}(0;\M{Q})
 \end{equation}
-where 
-\begin{equation*}
-\begin{split}
-\M{\Phi} 	&= \text{the state transition matrix} \\
-\V{w}		&= \text{the process noise} \\
-k 			&= \text{time index} \\
-\M{Q}		&= \text{the system covariance matrix}
-\end{split}
-\end{equation*}
-and the matrices describing our constant-velocity model is (\ref{eq:model_matrices}).
 \begin{equation}\label{eq:model_matrices}
 \M{\Phi} =	\begin{bmatrix}
 1 & 0 & T & 0 \\
@@ -44,9 +81,18 @@ and the matrices describing our constant-velocity model is (\ref{eq:model_matric
 0				& \frac{T^2}{2}		& 0				& T				\\
 \end{bmatrix}
 \end{equation}
+\begin{equation*}
+\begin{split}
+\M{\Phi} 	&= \text{the state transition matrix} \\
+\V{w}		&= \text{the process noise} \\
+k 			&= \text{time index} \\
+\M{Q}		&= \text{the system covariance matrix} \\
+T  			&= \text{time step} \\
+\end{split}
+\end{equation*}
 
 \section{Track Initiation}
-In comparison with \gls{homht} who treats every measurement as a potential new track since its hypotheses are essentially different ways of organizing its measurements into tracks, which are repeated for every iteration. \Gls{tomht} does not have any built-in initialization of tracks since it essentially only maintains an already existing track with track splitting and measurement-to-track association for every iteration. To remedy this lack, we need an algorithm that can find consistent and predictable patterns in an assumed uniformly distributed measurement space of clutter. 
+In comparison with \gls{homht} who treats every measurement as a potential new track since its hypotheses are essentially different ways of organizing its measurements into tracks, which are repeated for every iteration, \gls{tomht} does not have any built-in initialization of tracks since it only maintains an already existing track with track splitting and measurement-to-track association for every iteration. To remedy this lack, we need an algorithm that can find consistent and predictable patterns in an assumed uniformly distributed measurement space of clutter. 
 
 In this work, new tracks are initiated with 2/2 \& m/n logic~\cite{Vo2015} on the unused measurements after each MHT iteration. As the name of the method indicates, this is a two step verification, where the first act as a rough filter and the second as a fine filter. As one of the main assumptions in most tracking systems, the measured radar clutter is assumed uniformly distributed in the measurement area. This assumption is quite rough in the radial measurement space, and even worse approximation in Cartesian measurement space, as illustrated in \Cref{fig:clutter_radial,fig:clutter_cartesian}.  Although far from perfect, tests shows that we still get satisfactory performance from the 2/2\&m/n method.
 \begin{figure}
