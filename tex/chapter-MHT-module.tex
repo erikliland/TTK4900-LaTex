@@ -95,7 +95,7 @@ T  			&= \text{time step} \\
 In comparison with \gls{homht} who treats every measurement as a potential new track since its hypotheses are essentially different ways of organizing its measurements into tracks, which are repeated for every iteration, \gls{tomht} does not have any built-in initialization of tracks since it only maintains an already existing track with track splitting and measurement-to-track association for every iteration. To remedy this lack, we need an algorithm that can find consistent and predictable patterns in an assumed uniformly distributed measurement space of clutter. 
 
 In this work, new tracks are initiated with 2/2 \& m/n logic~\cite{Vo2015} on the unused measurements after each MHT iteration. As the name of the method indicates, this is a two step verification, where the first act as a rough filter and the second as a fine filter. As one of the main assumptions in most tracking systems, the measured radar clutter is assumed uniformly distributed in the measurement area. This assumption is quite rough in the radial measurement space, and even worse approximation in Cartesian measurement space, as illustrated in \Cref{fig:clutter_radial,fig:clutter_cartesian}.  Although far from perfect, tests shows that we still get satisfactory performance from the 2/2\&m/n method.
-\begin{figure}
+\begin{figure}[H]
 \centering
 \begin{minipage}{0.45\textwidth}
 \includegraphics[width=0.9\textwidth]{Figures/clutterRadial.png}
@@ -106,22 +106,21 @@ In this work, new tracks are initiated with 2/2 \& m/n logic~\cite{Vo2015} on th
 \caption{Uniform Cartesian clutter}\label{fig:clutter_cartesian}
 \end{minipage}
 \end{figure}
-The flow of the method is illustrated in Figure~\ref{fig:init_flowchart}, and for better clarity, the algorithm is explained from the last step to the first step, since this is the sequence a newly started initiator will perform its operations.
+The flow of the method is illustrated in Figure~\ref{fig:init_flowchart}, and for better clarity, the algorithm is explained from the last step to the first step, since this is the sequence a newly started initiation algorithm will perform its operations.
 \begin{figure}[H]
 \centering
 \includegraphics[width = .9\textwidth]{init_flowchart.pdf}
 \caption{2/2\&m/n flowchart}\label{fig:init_flowchart}
 \end{figure}
 
-
 \subsection{Spawn new initiators}
-All measurement unused by the `Process preliminary tracks' and `Process preliminary tracks' steps will be the basis for new \emph{initiators}. An initiator is a measurement that that awaits its match in the next scan. The idea is that uniformly distributed clutter will not (often) reappear at approximately the same location two times in a row, effectively filtering out most of the clutter.
+All measurement unused by the `Process preliminary tracks' and `Process initiators' steps will be the basis for new \emph{initiators}. An initiator is a measurement that that awaits its match in the next scan. The idea is that uniformly distributed clutter will not (often) reappear at approximately the same location two times in a row, effectively filtering out most of the clutter.
 
 \subsection{Process initiators}
-When the next scan arrives, all the unused measurements from the `Process preliminary tracks' step will be used as candidates in this step. Since an initiator is only a position and not a full state with velocity, all directions are equally likely, and the only design parameter in this step is maximum speed of targets to be tracked. This parameter sets an outer limit on the circle acting as a gate for the second and confirming measurement. When matching initiators with a second measurement, we want to select the closest measurement, making the assumption that the two consecutive measurements are the most likely to belong together. In a single target scenario, where this would be to calculate the distance to all the alternative measurements and select the lowest, the association is already done. While in a multitarget scenario, we \emph{could} select the closest measurement to any initiator, bur we would have to do this one initiator at a time. This would lead to different results depending on the arrangement of the initiators in the programming of this method. A different approach would be to calculate all the different distances for any possible combination of initiators and measurements, sort the list, and assign the distances from the shortest to the longest possible distances. This approach would not be influenced by randomness like the arrangement of the initiators in a programming language, but would not necessarily give the global optimal association regarding the how many initiators that are assigned measurements and their respective distances.
+When the next scan arrives, all the unused measurements from the `Process preliminary tracks' step will be used as candidates in this step. Since an initiator is only a position and not a full state with velocity, all directions are equally likely, and the only design parameter in this step is maximum speed of targets to be tracked. This parameter sets an outer limit on the circle acting as a gate for the second and confirming measurement. When matching initiators with a second measurement, we want to select the closest measurement, making the assumption that the two consecutive measurements are the most likely to belong together. In a single target scenario, where this would be to calculate the distance to all the alternative measurements and select the lowest, the association is already done. While in a multitarget scenario, we \emph{could} select the closest measurement to any initiator, but we would have to do this one initiator at a time. This would lead to different results depending on the arrangement of the initiators in the programming of this method. A different approach would be to calculate all the different distances for any possible combination of initiators and measurements, sort the list, and assign the distances from the shortest to the longest possible distances. This approach would not be influenced by randomness like the arrangement of the initiators in a programming language, but would not necessarily give the global optimal association regarding the how many initiators that are assigned measurements and their respective distances.
 
 Since we can have situations like exemplified in Figure~\ref{fig:init_gating}, where two initiators have the same measurement inside their gates, and one of them have a second measurement inside its gate, we need to take the global consequence of any assignment into consideration.
-\begin{figure}[H]
+\begin{figure}
 \centering
 \includegraphics[width = .8\textwidth]{Figures/init_gating.pdf}
 \caption{Initiator gating example}\label{fig:init_gating}
@@ -152,9 +151,12 @@ If we remove the columns with only infinity, we are removing measurements that c
     I_2 & \infty 	& 2 	\\
 }
 \end{equation}
-We now have formulated our problem in a way that it can be solved by the `Hungarian' algorithm, which will give us the association \(I_1 \rightarrow M_1\) and \(I_2 \rightarrow M_2\)
+We now have formulated our problem in a way that it can be solved by the `Hungarian'\footnote{also known as the Munkres or Kuhn-Munkres algorithm} algorithm~\cite{Munkres1957}, which will give us the association \(I_1 \rightarrow M_1\) and \(I_2 \rightarrow M_2\). From the associations, a full state is calculated and a new preliminary track is created. A preliminary track contains a state, covariance and counters of number of checks and passed checks.
 
 \subsection{Process preliminary tracks}
+When a new set of unused measurements arrive from the tracker, all the preliminary tracks are predicted to the time of the measurements. We now have the same association challenge between the predicted states and the measurements as with the initiators and measurements. Since we now have a full state and covariance for every preliminary track, we calculate the \gls{nis} for every combination of preliminary tracks and measurements, and selects the best combination. The preliminary tracks that is associated with a new measurement, their passed counter is incremented with one, while all preliminary tracks' checks counter is incremented with one. 
+
+For preliminary tracks that have enough passed measurements a new initial target is sent to the tracker. All preliminary tracks with check counter above the threshold is categorized as dead and deleted. 
 
 \section{MHT Overview}
 \begin{figure}[H]
