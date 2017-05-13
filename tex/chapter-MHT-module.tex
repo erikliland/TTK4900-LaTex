@@ -4,57 +4,11 @@
 To create a complete tracking \emph{system}, rather than a tracking \emph{algorithm}, it is often necessary  to complement the main algorithm with support modules. The system, or module if it is a part of a bigger system, presented here is an extension of the pre master project~\cite{Liland_2017}. The aim of this chapter is to provide a complete walkthrough of the the track oriented MHT system presented in this thesis. The motion model which is used throughout the entire tracking system when predicting and filtering target behaviour is presented first. Next follows an overview of the algorithm used to initiate new tracks into the MHT algorithm. Followed by the entire MHT tracking algorithm with all its sub-routines.
 
 \section{Motion Model}\label{sec:motion-model}
-The radar measurements is by nature in polar frame, and the target motion model is best described in a Cartesian frame. The most usual solution is to convert the radar measurements to a Cartesian frame, and to avoid biased and optimistic covariances of the converted measurements, a procedure which compensates for these errors, (\ref{eq:debiased_coordinate_conversion}) and (\ref{eq:average_true_converted_measurement_covariace}),  should be used in stead of the standard conversion (\ref{eq:standard_coordinate_conversion}) and (\ref{eq:linearized_converted_measurement_covariace})~\cite{Bar-Shalom1995}.
-\begin{equation}\label{eq:debiased_coordinate_conversion}
-\begin{split}
-\begin{bmatrix} x \\ y \end{bmatrix} &= \begin{bmatrix} r_m \cos \theta_m  \\ r_m \sin \theta_m  \end{bmatrix} - \mu_a \\
-\mu_a & \triangleq 
-\begin{bmatrix}
-	E \lbrack \tilde{x}|r_m,\theta_m \rbrack \\ 
-	E \lbrack \tilde{y}|r_m,\theta_m \rbrack 
-\end{bmatrix} 
-= 
-\begin{bmatrix}
-	r_m \cos \theta_m (e^{-\sigma^2_\theta}) - e^{-\sigma^2_\theta / 2} \\ 
-	r_m \sin \theta_m (e^{-\sigma^2_\theta}) - e^{-\sigma^2_\theta / 2}
-\end{bmatrix} 
-\end{split}
-\end{equation}
+\subsection{Reference frame}
+A local Cartesian NED-frame like \gls{utm} will be used throughout this thesis, with the assumption than all input sensors are transformed to this frame. This local projection from a geodetic coordinate system to a Cartesian coordinate system is acceptable as long as the the area the system is working on is within one grid. A global geodetic frame, like WGS84 would be preferable in situations where the system tracks object over world-scale lengths and would yield non-linear equations of motion. 
 
-\begin{equation}\label{eq:average_true_converted_measurement_covariace}
-\begin{split}
-R_a^{11} & \triangleq r_m^2 e^{-2\sigma_\theta^2} \lbrack \cos^2\theta_m(\cosh 2\sigma_\theta^2-\cosh \sigma_\theta^2) + \sin^2\theta_m (\sinh 2\sigma_\theta^2 - \sinh \sigma_\theta^2) \rbrack \\
-& + \sigma_r^2 e^{-2\sigma_\theta^2} \lbrack \cos^2 \theta_m (2\cosh 2\sigma_\theta^2 - \cosh\sigma_\theta^2) + \sin^2 \theta_m (2\sinh 2\sigma_\theta^2 - \sinh \sigma_\theta^2) \rbrack \\
-R_a^{22} & \triangleq r_m^2 e^{-2\sigma_\theta^2} \lbrack \sin^2\theta_m(\cosh 2\sigma_\theta^2-\cosh \sigma_\theta^2) + \cos^2\theta_m (\sinh 2\sigma_\theta^2 - \sinh \sigma_\theta^2) \rbrack \\
-& + \sigma_r^2 e^{-2\sigma_\theta^2} \lbrack \sin^2 \theta_m (2\cosh 2\sigma_\theta^2 - \cosh\sigma_\theta^2) + \cos^2 \theta_m (2\sinh 2\sigma_\theta^2 - \sinh \sigma_\theta^2) \rbrack \\
-R_a^{12} & \triangleq \sin \theta_m \cos \theta_m e^{-4\sigma_\theta^2} \lbrack \sigma_r^2 + (r_m^2 + \sigma_r^2)(1-e^{\sigma_\theta^2}) \rbrack
-\end{split}
-\end{equation}
-
-\begin{equation}\label{eq:standard_coordinate_conversion}
-x = r_m \cos \theta_m \qquad y = r_m \sin \theta_m
-\end{equation}
-
-\begin{equation}\label{eq:linearized_converted_measurement_covariace}
-\begin{split}
-R_L^{11} & \triangleq r_m^2 \sigma_\theta^2 \sin^2\theta_m + \sigma_r^2 \cos^2 \theta_m \\
-R_L^{22} & \triangleq r_m^2 \sigma_\theta^2 \cos^2\theta_m + \sigma_r^2 \sin^2 \theta_m \\
-R_L^{12} & \triangleq (\sigma_r^2 - r_m^2 \sigma_\theta^2) \sin \theta_m \cos \theta_m \\
-\end{split}
-\end{equation}
-
-\begin{equation*}
-\begin{split}
-r_m 			&= \text{measured range} \\
-\theta_m		&= \text{measured bearing} \\
-\sigma_r 		&= \text{range measurement standard deviation} \\
-\sigma_\theta 	&= \text{bearing measurement standard deviation} \\
-\M{R_a} 		&= \text{average true converted measurement covariance} \\
-\M{R_L} 		&= \text{linearised converted measurement covariance} \\
-\end{split}
-\end{equation*}
-
-A local Cartesian NED-frame will be used throughout this thesis, with the assumption than all input sensors are transformed to this local frame. In real life, when working on an approximated local Cartesian frame is doable as long as the area in question is reasonable small. A global geodetic frame, like WGS84, would be preferable, but will yield non-linear motion equations. The state of the targets are modelled with four states (\ref{eq:state_vector}) where the \(x\)-axis is pointing east and the \(y\)-axis is pointing north. The two latest states are their velocities in their respective direction.
+\subsection{Constant velocity model}
+The state of the targets are modelled with four states (\ref{eq:state_vector}) in a Cartesian frame where the \(x\)-axis is pointing east and the \(y\)-axis is pointing north. The two latest states are their velocities in their respective direction.
 \begin{equation}
 \V{x} = \begin{bmatrix}
 x & y & \dot{x} & \dot{y}
@@ -62,9 +16,12 @@ x & y & \dot{x} & \dot{y}
 \label{eq:state_vector}
 \end{equation}
 
-Since modelling the behaviour of any ship under unknown command is next to impossible, a common assumption in tracking theory is that every target will continue on as usual, more precisely that their velocity is constant. Although simple, this model captures the essence of most vessels at sea, and when looking at maritime training~\cite{Allen2005} and regulation~\cite{IMO1972}, they both dictates that vessels should hold steady course and change course in clear decisive turns. To give room in our model for manoeuvring, the process noise covariance is set according to the assumed manoeuvring capabilities of the vessels. This could be set as a fixed value for all targets, as done in this work, or estimated based on the history of the track or AIS information. This behaviour can be modelled as a linear time invariant system  with time evolution (\ref{eq:motion_model}), and transition and covariance matrix (\ref{eq:model_matrices}).
+Since modelling the behaviour of any ship under unknown command is next to impossible, a common assumption in tracking theory is that every target will continue on as usual, more precisely that their velocity is constant. Although simple, this model captures the essence of most vessels at sea, and when looking at maritime training~\cite{Allen2005} and regulation~\cite{IMO1972}, they both dictates that vessels should hold steady course and change course in clear decisive turns. This model is also very comming in tracking applications and is used in~\cite{Reid1979,Coraluppi2000,Brekke2012,Wilthil,Vo2015,Chen2003,Habtemariam2015} among others. To give room in our model for manoeuvring, the process noise covariance is set according to the assumed manoeuvring capabilities of the vessels. This could be set as a fixed value for all targets, as done in this work, or estimated based on the history of the track or AIS information. This behaviour can be modelled as a linear time invariant system  with time evolution (\ref{eq:motion_model}), measurement model (\ref{eq:measurement_model}), transition and observation matrices (\ref{eq:model_matrices}) and systen and measurement noise matrices (\ref{eq:noise_matrices}).
 \begin{equation}\label{eq:motion_model}
-\V{x}(k+1) = \M{\Phi} \V{x}(k) + \V{w}(k) \qquad \V{w} \sim \mathcal{N}(0;\M{Q})
+\V{x}_{k+1} = \M{\Phi} \V{x}_k + \V{w}_k \qquad \V{w} \sim \mathcal{N}(0;\M{Q})
+\end{equation}
+\begin{equation}\label{eq:measurement_model}
+\V{z}_{k+1} = \M{H}\V{x}_k + \V{v}_k \qquad \V{v} \sim \mathcal{N}(0;\M{R})
 \end{equation}
 \begin{equation}\label{eq:model_matrices}
 \M{\Phi} =	\begin{bmatrix}
@@ -74,19 +31,34 @@ Since modelling the behaviour of any ship under unknown command is next to impos
 0 & 0 & 0 & 1 \\
 \end{bmatrix}
 \quad
+\M{H} =	\begin{bmatrix}
+1 & 0 & 0 & 0 \\
+0 & 1 & 0 & 0 \\
+\end{bmatrix}
+\end{equation}
+\begin{equation}\label{eq:noise_matrices}
 \M{Q}	= \sigma_v^2 \begin{bmatrix}
 \frac{T^3}{3} 	& 0 				& \frac{T^2}{2}	& 0 			\\
 0 				& \frac{T^3}{3}  	& 0 			& \frac{T^2}{2}	\\
 \frac{T^2}{2}	& 0					& T				& 0				\\
 0				& \frac{T^2}{2}		& 0				& T				\\
 \end{bmatrix}
+\quad
+\M{R} =	\sigma_m^2 
+\begin{bmatrix}
+1 & 0 \\
+0 & 1 \\
+\end{bmatrix}
 \end{equation}
 \begin{equation*}
 \begin{split}
-\M{\Phi} 	&= \text{the state transition matrix} \\
-\V{w}		&= \text{the process noise} \\
+\M{\Phi} 	&= \text{state transition matrix} \\
+\M{H}		&= \text{state observation matrix} \\
+\M{Q}		&= \text{system covariance matrix} \\
+\V{w}		&= \text{process noise} \\
+\V{v}		&= \text{measurement noise} \\
+\V{z}		&= \text{measurement vector} \\
 k 			&= \text{time index} \\
-\M{Q}		&= \text{the system covariance matrix} \\
 T  			&= \text{time step} \\
 \end{split}
 \end{equation*}
@@ -98,11 +70,11 @@ In this work, new tracks are initiated with 2/2 \& m/n logic~\cite{Vo2015} on th
 \begin{figure}[H]
 \centering
 \begin{minipage}{0.45\textwidth}
-\includegraphics[width=0.9\textwidth]{Figures/clutterRadial.png}
+\includegraphics[width=\textwidth]{Figures/clutterRadial.png}
 \caption{Uniform radial clutter}\label{fig:clutter_radial}
 \end{minipage}\hfill
 \begin{minipage}{0.45\textwidth}
-\includegraphics[width=0.9\textwidth]{Figures/clutterCartesian.png}
+\includegraphics[width=\textwidth]{Figures/clutterCartesian.png}
 \caption{Uniform Cartesian clutter}\label{fig:clutter_cartesian}
 \end{minipage}
 \end{figure}
@@ -147,7 +119,7 @@ If we remove the columns with only infinity, we are removing measurements that c
 \begin{equation}\label{eq:masked_gated_init_assignment_matrix}
 \kbordermatrix{
 	 	& M_1 		& M_2	\\
-    I_1 & 3 		& 1  	\\
+    I_1 & 3 		& 1  	\\ 
     I_2 & \infty 	& 2 	\\
 }
 \end{equation}
@@ -159,30 +131,67 @@ When a new set of unused measurements arrive from the tracker, all the prelimina
 For preliminary tracks that have enough passed measurements a new initial target is sent to the tracker. All preliminary tracks with check counter above the threshold is categorized as dead and deleted. 
 
 \section{MHT Overview}
+The aim of this section is to outline the major steps in the MHT module and the flow of data and decisions. Figure~\ref{fig:algorithm_flow} shows the main steps that the module perform at each iteration / radar scan. When new measurements are received, all track hypotheses / leaf nodes are predicted forward to the time of the radar measurements. The measurements are then gated for each hypothesis, and new hypotheses are generated for measurements within the gate. Each new hypothesis is then given a score, which is an accumulation of the parent node score and the new node's score. The target trees are then clustered according to which trees that shares measurements, whereon clusters with only one tree has the option of removing / merging similar hypotheses to reduce the size of the tree. For each cluster, the cluster-wise globally best association combination is selected using \gls{ilp}. Then, for each selected hypothesis the parent N steps above becomes the new root of that tree, and the children to the previous root node are removed. The sliding window size (N) could be a static design parameter or a function of the runtime of that tree, which reflects the overall size of the tree. This enables the system to adapt its core parameters to guarantee its runtime demands. Next, targets who's  best hypothesis have a score below the threshold is terminated, followed by the initialization of new targets from the initiator module. 
 \begin{figure}[H]
 \centering
-\includegraphics[width = .8\textwidth]{algorithm_flowchart.pdf}
+\includegraphics[width = \textwidth]{algorithm_flowchart.pdf}
 \caption{Algorithm flowchart}\label{fig:algorithm_flow}
 \end{figure}
 
 \section{Predict target position}
-\begin{equation}
+To compare new measurements with existing hypotheses, we should predict their states to the same time as the measurements, which can be done with the Kalman filter `time update' equation (\ref{eq:kalman_timeUpdate}). The residual covariance and optimal kalman gain (\ref{eq:kalman_measurementUpdate_precalc}), which is a part of the `measurement update' sequence of a Kalman filter are also calculated as the residual covariance is needed in the gating.
+\begin{equation}\label{eq:kalman_timeUpdate}
 \begin{split}
-\V{\bar{x}}(k+1) 	&= \M{\Phi} \V{\hat{x}}(k) \\
-\M{\bar{P}}(k+1)	&= \M{\Phi} \M{\hat{P}}(k)  \M{\Phi}^T + \M{Q} \\
+\V{\bar{x}}_{k+1} 	&= \M{\Phi} \V{\hat{x}}_k \\
+\M{\bar{P}}_{k+1}	&= \M{\Phi} \M{\hat{P}}_k  \M{\Phi}^T + \M{Q} \\
 \end{split}
-\label{eq:kalman_timeUpdate}
+\end{equation}
+\begin{equation}\label{eq:kalman_measurementUpdate_precalc}
+\begin{split}
+\M{S}_k	&= \M{H}\M{\bar{P}}_k \M{H}^T + \M{R} \\
+\M{K}_k &= \M{\bar{P}}_k \M{H}^T \M{S}_k^{-1} \\
+\end{split}
 \end{equation}
 
+\begin{equation*}
+\begin{split}
+\V{\bar{x}}	&= \text{predicted state} \\
+\V{\hat{x}} &= \text{filtered state} \\
+\M{\bar{P}} &= \text{predicted state covariance} \\
+\M{\hat{P}} &= \text{filtered state covariance} \\
+\M{Q}		&= \text{system noise covariance} \\
+k  			&= \text{time index} \\
+\end{split}
+\end{equation*}
+
 \section{Gate and Create new hypotheses}
-\begin{equation}
+To limit the number of hypotheses each leaf node have make, the measurements are gated based on the leaf nodes predicted covariance and a set confidence level. The size of this gate (Figure~\ref{fig:gate_illustration}) will reflect how unsecure the prediction is, which is a function of how many detections and missed detections the leaf node have had. The gate is defined as \gls{nis} less that a threshold set by the \(\chi^2\)--distribution \gls{cdf} with two degrees of freedom and a set confidence value. A set of confidence levels and belonging \(\chi^2\) \gls{cdf} values are listed in Table~\ref{tab:chi_square}.
+\begin{equation}\label{eq:gate}
 \begin{gathered}
-\M{S}	= \M{H} \M{\bar{P}} \M{H}^T + \M{R} \\
 \V{\tilde{z}} = \V{z} - \M{H}\V{\bar{x}} \\
-\V{\tilde{z}}^T	\M{S}^{-1} \V{\tilde{z}} \leq \eta^2
-\label{eq:gate}
+NIS = \V{\tilde{z}}^T	\M{S}^{-1} \V{\tilde{z}} \leq \eta^2
 \end{gathered}
 \end{equation}
+\begin{equation*}
+\begin{split}
+\V{\tilde{z}}	&= \text{Measurement residual}  \\
+\eta^2 			&= \text{Inverse \(\chi^2\) \gls{cdf}} \\
+\end{split}
+\end{equation*}
+\begin{table}
+\centering
+\begin{tabular}{c c c c c c c c}
+Confidence 	& 70\% 	& 80\% 	& 90\% 	& 95\% 	& 97.5\% 	& 99\% 	& 99.5\% \\ 
+\midrule
+\(\eta^2\) 	& 2.41 	& 3.22 	& 4.61 	& 5.99 	& 7.38 		& 9.21 	& 10.60
+\end{tabular}\caption{Inverse \(\chi^2\) \gls{cdf} for two degrees of freedom}
+~\label{tab:chi_square}
+\end{table}
+\begin{figure}
+\centering
+\includegraphics[width = .7\textwidth]{Figures/gate_without_measurement.png}
+\caption{Predicted state and gate}\label{fig:gate_illustration}
+\end{figure}
 
 \subsection{Zero hypothesis}
 To account for the possibility that the target is not present in this scan, a \emph{zero} hypothesis, or \emph{dummy} hypothesis as it is sometimes called, is generated with the predicted state and covariance.
@@ -273,7 +282,7 @@ There are two sets of constraints (\ref{eq:my_constraints}), one equality and on
 \end{aligned}
 \label{eq:my_constraints}
 \end{equation}
-\(\M{A_1}\) is a \(N_1 \times M\) binary matrix with \(N_1\) real measurements and \(M\) track hypotheses (all leaf nodes), where \(\M{A_1}(l,i)=1\) if hypothesis \(l\) are utilizing measurement \(i\), \(0\) otherwise. The measurements and hypothesis are indexed by the order they are visited by \gls{dfs}. \(\M{A_2}\) is an \(N_2 \times M\) binary matrix where \(N_2\) is the number of targets in the cluster and \(\M{A_2}(l,j)=1\) if hypothesis \(l\) belongs to target \(j\). \(\V{b_1}\) is a \(N_1\) long vector with ones and \(\V{b_2}\) is a \(N_2\) long vector with ones. \(\V{c}\) is a \(M\) long vector with a measure of the goodness of the track hypotheses. For example, in Figure~\ref{fig:hyp-tree} at time step 2, the \(\M{A}\) matrices and \(\V{C}\) vector would be (\ref{eq:example_matrices}).
+\(\M{A_1}\) is a \(n_1 \times m\) binary matrix with \(n_1\) real measurements and \(m\) track hypotheses (all leaf nodes), where \(\M{A_1}(l,i)=1\) if hypothesis \(l\) are utilizing measurement \(i\), \(0\) otherwise. The measurements and hypothesis are indexed by the order they are visited by \gls{dfs}. \(\M{A_2}\) is an \(N_2 \times m\) binary matrix where \(N_2\) is the number of targets in the cluster and \(\M{A_2}(l,j)=1\) if hypothesis \(l\) belongs to target \(j\). \(\V{b_1}\) is a \(n_1\) long vector with ones and \(\V{b_2}\) is a \(N_2\) long vector with ones. \(\V{c}\) is a \(m\) long vector with a measure of the goodness of the track hypotheses. For example, in Figure~\ref{fig:hyp-tree} at time step 2, the \(\M{A}\) matrices and \(\V{C}\) vector would be (\ref{eq:example_matrices}).
 \begin{figure}[H]
 \centering
 \includegraphics[clip, trim=0cm 2.5cm 0cm 2.5cm, width = .7\textwidth]{Track-tree}
@@ -306,7 +315,6 @@ There are two sets of constraints (\ref{eq:my_constraints}), one equality and on
 \end{equation}
 
 The explicit enumeration that becomes necessary when creating these \(\M{A}\) matrices is exhaustive since the dimension of \(\V{\tau}$, which is equal to the number of leaf nodes in the track forest, can be very large. Both \(\M{A}_1\) and \(\M{A}_2\) grows quadratically with the number of track hypotheses and real measurements or number of targets respectively.
-% \(N_1\) is proportional with the number of targets and history steps (N-scan). 
 
 \subsection{Solvers}
 There are a lot of off-the-shelf \gls{ilp} and \gls{milp} solvers on the marked, both free open source and commercial. Since the problem in this report is formulated on standard form, it can easily be executed on several solvers, and we can compare runtime and performance. The performance difference of some of these where tested in~\cite{Liland_2017}, where the difference where found marginal, probably because of the nature of the problem. %The read/write overhead, building problem vs. solving problem, etc. 

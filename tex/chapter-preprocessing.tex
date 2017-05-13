@@ -12,6 +12,57 @@ With all the spoke resolution cells converted to a world-fixed Cartesian coordin
 
 The last step in the radar processing chain is to convert a point cloud into measurements, as one target will in most cases fill multiple resolution cells and therefore it does not yield good result to send all cells with detection forward as measurements. This clustering of the detections also need to take into consideration the assumption that each target maximum generates one measurements. This leads to clustering algorithms that assumes that detections closely spaced are originating from the same target, and thus should be one measurement. There is many clustering algorithms available to solve this problem, some builds graphs with vertices between neighbouring detections given a neighbour criterion, some estimates the number of clusters and optimizing the detections into this number of clusters~\cite{Mahmuddin2010,Pelleg2000}. When a set of detections are clustered, their respective measurement is calculated as the centroid of the detections, which would be weighted by their signal strength if available. These measurements are sent to the tracking module.
 
+\subsection{Frame conversion}
+The radar measurements is by nature in polar frame, and the target motion model is best described in a Cartesian frame. The most usual solution is to convert the radar measurements to a Cartesian frame, and to avoid biased and optimistic covariances of the converted measurements, a procedure which compensates for these errors, (\ref{eq:debiased_coordinate_conversion}) and (\ref{eq:average_true_converted_measurement_covariace}),  should be used in stead of the standard conversion (\ref{eq:standard_coordinate_conversion}) and (\ref{eq:linearized_converted_measurement_covariace})~\cite{Bar-Shalom1995}.
+\begin{equation}\label{eq:debiased_coordinate_conversion}
+\begin{split}
+\begin{bmatrix} x \\ y \end{bmatrix} &= \begin{bmatrix} r_m \cos \theta_m  \\ r_m \sin \theta_m  \end{bmatrix} - \mu_a \\
+\mu_a & \triangleq 
+\begin{bmatrix}
+	E \lbrack \tilde{x}|r_m,\theta_m \rbrack \\ 
+	E \lbrack \tilde{y}|r_m,\theta_m \rbrack 
+\end{bmatrix} 
+= 
+\begin{bmatrix}
+	r_m \cos \theta_m (e^{-\sigma^2_\theta}) - e^{-\sigma^2_\theta / 2} \\ 
+	r_m \sin \theta_m (e^{-\sigma^2_\theta}) - e^{-\sigma^2_\theta / 2}
+\end{bmatrix} 
+\end{split}
+\end{equation}
+
+\begin{equation}\label{eq:average_true_converted_measurement_covariace}
+\begin{split}
+R_a^{11} & \triangleq r_m^2 e^{-2\sigma_\theta^2} \lbrack \cos^2\theta_m(\cosh 2\sigma_\theta^2-\cosh \sigma_\theta^2) + \sin^2\theta_m (\sinh 2\sigma_\theta^2 - \sinh \sigma_\theta^2) \rbrack \\
+& + \sigma_r^2 e^{-2\sigma_\theta^2} \lbrack \cos^2 \theta_m (2\cosh 2\sigma_\theta^2 - \cosh\sigma_\theta^2) + \sin^2 \theta_m (2\sinh 2\sigma_\theta^2 - \sinh \sigma_\theta^2) \rbrack \\
+R_a^{22} & \triangleq r_m^2 e^{-2\sigma_\theta^2} \lbrack \sin^2\theta_m(\cosh 2\sigma_\theta^2-\cosh \sigma_\theta^2) + \cos^2\theta_m (\sinh 2\sigma_\theta^2 - \sinh \sigma_\theta^2) \rbrack \\
+& + \sigma_r^2 e^{-2\sigma_\theta^2} \lbrack \sin^2 \theta_m (2\cosh 2\sigma_\theta^2 - \cosh\sigma_\theta^2) + \cos^2 \theta_m (2\sinh 2\sigma_\theta^2 - \sinh \sigma_\theta^2) \rbrack \\
+R_a^{12} & \triangleq \sin \theta_m \cos \theta_m e^{-4\sigma_\theta^2} \lbrack \sigma_r^2 + (r_m^2 + \sigma_r^2)(1-e^{\sigma_\theta^2}) \rbrack
+\end{split}
+\end{equation}
+
+\begin{equation}\label{eq:standard_coordinate_conversion}
+x = r_m \cos \theta_m \qquad y = r_m \sin \theta_m
+\end{equation}
+
+\begin{equation}\label{eq:linearized_converted_measurement_covariace}
+\begin{split}
+R_L^{11} & \triangleq r_m^2 \sigma_\theta^2 \sin^2\theta_m + \sigma_r^2 \cos^2 \theta_m \\
+R_L^{22} & \triangleq r_m^2 \sigma_\theta^2 \cos^2\theta_m + \sigma_r^2 \sin^2 \theta_m \\
+R_L^{12} & \triangleq (\sigma_r^2 - r_m^2 \sigma_\theta^2) \sin \theta_m \cos \theta_m \\
+\end{split}
+\end{equation}
+
+\begin{equation*}
+\begin{split}
+r_m 			&= \text{measured range} \\
+\theta_m		&= \text{measured bearing} \\
+\sigma_r 		&= \text{range measurement standard deviation} \\
+\sigma_\theta 	&= \text{bearing measurement standard deviation} \\
+\M{R_a} 		&= \text{average true converted measurement covariance} \\
+\M{R_L} 		&= \text{linearised converted measurement covariance} \\
+\end{split}
+\end{equation*}
+
 \section{AIS preprocessing}~\label{sec:ais_preprocessing}
 \Gls{ais} does not suffer from the association uncertainty, clutter and low accuracy like radar measurement. It does however have some issues caused by suboptimal or erroneous transmitter implementation, transmission collision caused by \gls{tdma} leading to ID (\gls{mmsi}) swaps, and delayed messages leading to out of order reception. In order to remove most of these errors, it is desirable to filter the incoming \gls{ais} messages before sending them to the tracking module.
 
