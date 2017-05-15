@@ -51,56 +51,56 @@ The opposite is used on targets that try to minimize their radar signature, and 
 The \acrfull{ais} is a maritime safety and information system primarily designed for collision avoidance. \gls{ais} works by broadcasting messages on the \gls{vhf} band at irregular intervals with information on the vessels. \gls{ais} transceivers are required on international voyaging vessels over 300 \gls{gross_tonnage}, and on all passenger vessels. \gls{ais} signals are received at bother vessels and shore stations for use in \gls{vts} stations, open tracking databases like \url{www.marinetraffic.com}, fleet-monitoring and search and rescue. Since the \gls{ais} messages contains position, course and speed, \gls{ais} tracks can be overlaid on a map in a chart plotter or on top of a radar image, giving the operator two sensors to verify each other.
 
 \subsection{History}
-\gls{ais} was designed and developed by technical comities in the \gls{imo}. Its objective was to enhance vessels safety and efficiency by increasing their ability to see and identify other vessels. The main motivation for adopting \gls{ais} was its independence of humans in operation, since it automatically identifies other vessels and displays the information on the navigational system on the bridge. It also enables automatic calculation of \gls{cpa} and time until \gls{cpa}, in which the navigation system could alarm the bridge on incoming traffic on dangerous course. This gives the navigator on the bridge more and better information for making decisions, but with the caveat that not all vessels have \gls{ais}. In the 2002 \gls{imo} \gls{solas} Agreement, it is required that vessels over 300 \gls{gross_tonnage} and all passenger vessels must be equipped with class A AIS transceivers. A simpler and cheaper \gls{ais} version named class B aimed at smaller vessels and yachts was published in 2006, followed by a large increase in the amount of non-commercial vessels equipped with \gls{ais}.~\todo[inline]{Need citation}
+\gls{ais} was designed and developed by technical comities in the \gls{imo}. Its objective was to enhance vessels safety and efficiency by increasing their ability to see and identify other vessels. The main motivation for adopting \gls{ais} was its independence of humans in operation, since it automatically identifies other vessels and displays the information on the navigational system on the bridge. It also enables automatic calculation of \gls{cpa} and time until \gls{cpa}, in which the navigation system could alarm the bridge on incoming traffic on dangerous course. This gives the navigator on the bridge more and better information for making decisions, but with the caveat that not all vessels have \gls{ais}. In the 2002 \gls{imo} \gls{solas} Agreement, it is required that vessels over 300 \gls{gross_tonnage} and all passenger vessels must be equipped with class A AIS transceivers. A simpler and cheaper \gls{ais} version named class B aimed at smaller vessels and yachts was published in 2006, followed by a large increase in the amount of non-commercial vessels equipped with \gls{ais}.
 
 \subsection{Messages}
 \gls{ais} broadcasts both static, dynamic and voyage information with varying intervals based on the vessels speed, status and on request from shore stations. Static, dynamic and voyage messages are listed in Table~\cref{tab:static-ais,tab:dynamic-ais,tab:voyage-ais}. When the \gls{ais} standard was developed, the peak traffic situations in the two most densely trafficked waterways, Singapore and Dover Straits, where used to calculate the update frequency for the AIS system. Based on these two locations and a desire to keep the number of reports per minute below 2000, the dynamic information report intervals for class A and B was set as in Table~\ref{tab:classA_reporting_intervals} and~\ref{tab:classB_reporting_intervals} respectively~\cite{IALA2004}. Static information is transmitted every 6 minutes, and on request from \gls{vts} stations. \gls{ais} transceivers are utilizing two reserved \gls{vhf} channels; AIS 1 --- 87B (161.975MHz) and AIS 2 --- 88B (162.025MHz) to improve robustness against interference. An important note is that \gls{ais} transceivers are alternating which channel they are transmitting on, which means that if a receiver is only listening on one channel, the effective update rate halves.
 
 \begin{table}
 	\begin{tabularx}{\textwidth}{XX}
-	  \toprule
-	  \multicolumn{2}{c}{Static AIS information} \\
-	  \midrule
-	  MMSI & Maritime Mobile Service Identity \\
-	  Call sign & Maritime radio (VHF) call sign \\
-	  Name & Name of vessel \\
-	  IMO Number & Vessel IMO number \\
-	  Length and beam &   \\
-	  Location of positioning fixing antenna &   \\
-	  Height over keel &  \\
-	  \bottomrule
+	\toprule
+	\multicolumn{2}{c}{Static AIS information} \\
+	\midrule
+	MMSI & Maritime Mobile Service Identity \\
+	Call sign & Maritime radio (VHF) call sign \\
+	Name & Name of vessel \\
+	IMO Number & Vessel IMO number \\
+	Length and beam & \\
+	Location of positioning fixing antenna & \\
+	Height over keel & \\
+	\bottomrule
 	\end{tabularx}~\caption{Static AIS information}\label{tab:static-ais}
 
 	\vspace{0.5 cm}
 
 	\begin{tabularx}{\textwidth}{XX}
-	  \toprule
-	  \multicolumn{2}{c}{Dynamic AIS information} \\
-	  \midrule
-	  Position & In WGS84 frame \\
-	  Position accuracy  & Better or worse that 10 meter \\
-	  Position time stamp & UTC in whole seconds \\
-	  Course over ground (COG) &   \\
-	  Speed over ground  (SOG) &   \\
-	  Heading &   \\
-	  Navigational status &  \\
-	  Rate of turn (ROT) & \\
-	  \bottomrule
+	\toprule
+	\multicolumn{2}{c}{Dynamic AIS information} \\
+	\midrule
+	Position & In WGS84 frame \\
+	Position accuracy & Better or worse that 10 meter \\
+	Position time stamp & UTC in whole seconds \\
+	Course over ground (COG) & \\
+	Speed over ground (SOG) & \\
+	Heading & \\
+	Navigational status & \\
+	Rate of turn (ROT) & \\
+	\bottomrule
 	\end{tabularx}~\caption{Dynamic AIS information}\label{tab:dynamic-ais}
 
 	\vspace{0.5 cm}
 
 	\begin{tabularx}{\textwidth}{XX}
-	  \toprule
-	  \multicolumn{2}{c}{Voyage AIS information} \\
-	  \midrule
-	  Draught & Depth in water \\
-	  Hazardous cargo  & Type \\
-	  Destination & Name of place \\
-	  Estimated time of arrival (ETA) &   \\
-	  Route plan / waypoints &  \\
-	  Number of persons on board &  \\
-	  \bottomrule
+	\toprule
+	\multicolumn{2}{c}{Voyage AIS information} \\
+	\midrule
+	Draught & Depth in water \\
+	Hazardous cargo & Type \\
+	Destination & Name of place \\
+	Estimated time of arrival (ETA) & \\
+	Route plan / waypoints & \\
+	Number of persons on board & \\
+	\bottomrule
 	\end{tabularx}~\caption{Voyage AIS information}\label{tab:voyage-ais}
 \end{table}
 
@@ -114,9 +114,9 @@ The \acrfull{ais} is a maritime safety and information system primarily designed
 	Ship at anchor or moored \newline and moving faster than 3 knots & 10 seconds \\
 	Ship 0--14 knots & 10 seconds \\
 	Ship 0--14 knots and changing course & 3.3 seconds \\
-	Ship 14--23 knots & 6 seconds  \\
-	Ship 14--23 knots and changing course &  2 seconds \\
-	Ship > 23 knots &  2 seconds \\
+	Ship 14--23 knots & 6 seconds \\
+	Ship 14--23 knots and changing course & 2 seconds \\
+	Ship > 23 knots & 2 seconds \\
 	Ship > 23 knots and changing course & 2 seconds \\
 	\bottomrule
 	\end{tabularx}~\caption{Class A Reporting Intervals}\label{tab:classA_reporting_intervals}
@@ -130,7 +130,7 @@ The \acrfull{ais} is a maritime safety and information system primarily designed
 	Ship < 2 knots & 3 minutes \\
 	Ship 2--14 knots & 30 seconds \\
 	Ship 14--23 knots & 15 seconds \\
-	Ship > 23 knots &  5 seconds \\
+	Ship > 23 knots & 5 seconds \\
 	Search and Rescue aircraft & 10 seconds \\
 	Aids to navigation & 3 minutes \\
 	AIS base station & 10 seconds \\
@@ -147,23 +147,26 @@ Class B \gls{ais} transceivers are designed to be simpler and cheaper than Class
 
 \section{Tracking}
 \subsection{Overview}
-Tracking, in this context, is to follow stationary and moving targets that are observed by a system without included association data. The problem is to know which measurements belong together over time, often refereed to as the data association problem.
+Tracking, in this context, is the process of estimating the state of stationary and moving targets that are observed by a system without included association data. The challenge is to know which measurements belong together over time, often refereed to as the data association problem. An observation system can be a radar, sonar or any other sensor that, passively or actively, detects objects within an area or volume. Any observation system will be prone to noise, both in form of internal- and external noise from the environment. This noise will cause false measurements that the tracking system must take care of. These false measurements are often referred to as clutter.
+
+In this work `tracking algorithm' will be used to describe the main logic in a tracking method or approach, while `tracking system' will be used on complete systems with everything around the main algorithm included. A tracking system can  be defined as: \emph{A system that process consecutive measurements from one or more observation system and associates measurement from the same target into tracks with initialization of new tracks and termination of dead tracks}. A track is a sequence of states associated with a subset of all measurements from the observation systems. 
 
 \subsection{History}
-Tracking is a relative new filed of study, originating from the military technology race post 1945, enabled by the development of microprocessors and computers from the 60's. The applications ranged from sonar tracking on both submarines and navy vessels, to air control and missile guidance. This historical background is likely the reason for most published papers using these types of applications as background for testing. In recent years, tracking people and vehicles from visual- and \gls{sar} imagery have also become a topic in the research community~\cite{Carthel2007,Carthel2007a,Coraluppi2000}. There have also been published some research work on usage of tracking for \glspl{asv}~\cite{Wolf2010,Svec2014}, although both are focused on interaction and response to external events.
+Tracking is a relative new filed of study, driven by the military and aerospace industry, enabled by the development of microprocessors and computers from the 1960's. The applications ranged from sonar tracking on both submarines and navy vessels, to air control and missile guidance. This historical background is likely the reason for most published papers using these types of applications as background for testing. In recent years, tracking people and vehicles from visual- and \gls{sar} imagery have also become a topic in the research community~\cite{Carthel2007,Carthel2007a,Coraluppi2000}. New applications areas like oceanography, autonomous vehicles and biomedical research have also found use of tracking~\cite{Wolf2010,Svec2014,Vo2015}.
 
-%Challenge
-There are several factors contributing to the challenge of good tracking;\gls{clutter}, lower than unity \gls{Pd}, multiple detections of the same vessel and wakes. \Gls{clutter} is a term for unwanted measurements or noise, which is inherent in every observation system. For a maritime radar, this can be caused by waves, rain, snow, birds or shore echo. A common assumption on clutter is to assume the amount being Poisson \gls{Pd} is a measure of how persistent the target is in the measurements, and will vary much  between different types of targets. 
+There are several factors contributing to the challenge of good tracking; \gls{clutter}, lower than unity \gls{Pd}, multiple detections of the same vessel and wakes. \Gls{clutter} is a term for unwanted measurements or noise, which is inherent in every observation system. For a maritime radar, this can be caused by waves, rain, snow, birds or shore echo. A common assumption on clutter is to assume the amount being Poisson distributed, and spatially uniformly distributed. \gls{Pd} is a measure of how persistent the target is in the measurements, and will vary much between different types of targets, primarily dependent on their size, construction material and shape.
 
 \subsection{Single-target Tracking}
-The simplest approach to tracking is single-target tracking, where it is assumed that there are only one target in the measurement area, and any other measurement is regarded as either extra measurements of the target or false measurements, often referred to as \gls{clutter}.
+The simplest approach to tracking is single-target tracking, where it is assumed that there are only one target in the measurement area, and any other measurement is regarded as either extra measurements of the target or false measurements, often referred to as \gls{clutter}. The simplest single-target tracking algorithm is the \gls{nnf}, where the closest measurement is always selected~\cite{Bar-Shalom1998}. This approach is very vulnerable to clutter and multitarget scenarios, which is probably the reason its usage is very sparse. The arguably best single-target tracking algorithm is \gls{pdaf}, which calculates probabilities for all measurements inside its gate  and the state update is based on a weighted sum of measurement innovations. One of the main assumptions in \gls{pdaf} is that all the measurements inside its gate contains information about the targets true state. This assumption performs well in single-target scenarios since targets often create more than measurements, and thus using all measurements in state estimation effectively rejects much of the \gls{clutter} in each \gls{scan}.
 
 \subsection{Multitarget tracking}
-A subset of tracking is multitarget tracking, where the problem expands to jointly estimate both the number of targets and their trajectories~\cite{Vo2015}. While a large number of tracking techniques have been developed, the three most used are \gls{jpdaf}, \gls{mht} and \gls{rfs}~\cite{Vo2015}.
+A more generalized approach assuming that there can be any number of targets is called multitarget tracking. The problem expands to jointly estimate both the number of targets and their trajectories~\cite{Vo2015}. While a large number of tracking techniques have been developed, the three most used are \gls{jpdaf}, \gls{mht} and \gls{rfs}~\cite{Vo2015}. Compared to \gls{mht} and \gls{jpdaf}, \gls{rfs} is a relatively new approach to tracking, and does not have a well researched and tested literature base like \gls{mht} and \gls{jpdaf}. \gls{mht} and \gls{jpdaf} also differs from \gls{rfs} in that they both do data association and filtering, whereas \gls{rfs} directly seeks both optimal and suboptimal estimates of the multitarget state~\cite{Vo2015}.
 
-\subsection{JPDAF}
-\gls{jpdaf} is a multitarget expansion of \gls{pdaf} which is a single-target tracking technique. The essence of them both is consider 
+\subsubsection{JPDAF}
+\gls{jpdaf} is a multitarget expansion of \gls{pdaf} which is a single-target tracking technique. PDAF calculates joint posteriori association probabilities for every target in every scan. Each targets probability is a weighted sum of probabilities, where the weights are the key difference between \gls{pdaf} and \gls{jpdaf}. Like \gls{mht}, \gls{jpdaf} suffers from high computational cost, and an efficient implementation approach exist and is patented by QinetiQ~\cite{Horridge}.
 
-\subsection{RFS}
+\subsubsection{MHT}
 
-\subsection{MHT}
+
+\subsubsection{RFS}
+In \gls{rfs}, both targets and measurements are considered as random finite sets, which leads to a single equation for time update and a single equation for measurement update.
