@@ -16,7 +16,7 @@ x & y & \dot{x} & \dot{y}
 \label{eq:state_vector}
 \end{equation}
 
-Since modelling the behaviour of any ship under unknown command is next to impossible, a common assumption in tracking theory is that every target will continue on as usual, more precisely that their velocity is constant. Although simple, this model captures the essence of most vessels at sea, and when looking at maritime training~\cite{Allen2005} and regulation~\cite{IMO1972}, they both dictates that vessels should hold steady course and change course in clear decisive turns. This model is also very common in tracking applications and is used in~\cite{Reid1979,Coraluppi2000,Brekke2012,Wilthil,Vo2015,Chen2003,Habtemariam2015} among others. To give room in our model for manoeuvring, the process noise covariance is set according to the assumed manoeuvring capabilities of the vessels. This could be set as a fixed value for all targets, as done in this work, or estimated based on the history of the track or AIS information. This behaviour can be modelled as a linear time invariant system  with time evolution (\ref{eq:motion_model}), measurement model (\ref{eq:measurement_model}), transition and observation matrices (\ref{eq:model_matrices}) and systen and measurement noise matrices (\ref{eq:noise_matrices}).
+Since modelling the behaviour of any ship under unknown command is next to impossible, a common assumption in tracking theory is that every target will continue on as usual, more precisely that their velocity is constant. Although simple, this model captures the essence of most vessels at sea, and when looking at maritime training~\cite{Allen2005} and regulation~\cite{IMO1972}, they both dictates that vessels should hold steady course and change course in clear decisive turns. This model is also very common in tracking applications and is used in~\cite{Reid1979,Coraluppi2000,Brekke2012,Wilthil,Vo2015,Chen2003,Habtemariam2015} among others. To give room in our model for manoeuvring, the process noise covariance is set according to the assumed manoeuvring capabilities of the vessels. This could be set as a fixed value for all targets, as done in this work, or estimated based on the history of the track or AIS information. This behaviour can be modelled as a linear time invariant system  with time evolution (\ref{eq:motion_model}), measurement model (\ref{eq:measurement_model}), transition and observation matrices (\ref{eq:model_matrices}) and system and measurement noise matrices (\ref{eq:noise_matrices}).
 \begin{equation}\label{eq:motion_model}
 \V{x}_{k+1} = \M{\Phi} \V{x}_k + \V{w}_k \qquad \V{w} \sim \mathcal{N}(0;\M{Q})
 \end{equation}
@@ -131,44 +131,56 @@ When a new set of unused measurements arrive from the tracker, all the prelimina
 For preliminary tracks that have enough passed measurements a new initial target is sent to the tracker. All preliminary tracks with check counter above the threshold is categorized as dead and deleted. 
 
 \section{MHT Overview}
-The aim of this section is to outline the major steps in the MHT module and the flow of data and decisions. Figure~\ref{fig:algorithm_flow} shows the main steps that the module perform at each iteration / radar scan. When new measurements are received, all track hypotheses / leaf nodes are predicted forward to the time of the radar measurements. The measurements are then gated for each hypothesis, and new hypotheses are generated for measurements within the gate. Each new hypothesis is then given a score, which is an accumulation of the parent node score and the new node's score. The target trees are then clustered according to which trees that shares measurements, whereon clusters with only one tree has the option of removing / merging similar hypotheses to reduce the size of the tree. For each cluster, the cluster-wise globally best association combination is selected using \gls{ilp}. Then, for each selected hypothesis the parent N steps above becomes the new root of that tree, and the children to the previous root node are removed. The sliding window size (N) could be a static design parameter or a function of the runtime of that tree, which reflects the overall size of the tree. This enables the system to adapt its core parameters to guarantee its runtime demands. Next, targets who's  best hypothesis have a score below the threshold is terminated, followed by the initialization of new targets from the initiator module. 
-\begin{figure}[H]
+\begin{figure}
+ \centering
+ \includegraphics[height = .3\textheight]{Track-tree}
+ \caption{Hypothesis tree}\label{fig:hyp_tree}
+\end{figure}
+The aim of this section is to outline the major steps in the MHT module and the flow of data and decisions. Figure~\ref{fig:algorithm_flow} shows the main steps that the module perform at each iteration / radar scan. The \gls{mht} algorithm is working on a set of \glspl{dag} or  tree structures, often called a forest. The forest contains as many trees as targets the algorithm is tracking. Each tree consist of a root node and a set of child nodes, where each row represent a scan or discrete time. The leaf nodes are referred to as track hypotheses since leaf nodes represents itself and its parents.
+
+ When new measurements are received, all track hypotheses / leaf nodes are predicted forward to the time of the radar measurements. The measurements are then gated for each hypothesis, and new hypotheses are generated for measurements within the gate. Each new hypothesis is then given a score, which is the cumulative score of the parent node score and the new node's score. The target trees are then clustered according to which trees that shares measurements, whereon clusters with only one tree has the option of removing / merging similar hypotheses to reduce the size of the tree. For each cluster, the cluster-wise globally best association combination is selected using \gls{ilp}. Then, for each selected hypothesis the parent N steps above becomes the new root of that tree, and the unused children to the previous root node are removed. Next, targets who's  best hypothesis have a score below the threshold is terminated, followed by the initialization of new targets from the initiator module. 
+
+ The algorithm described in the three following are repeated for every leaf node in the forest. To avoid an extensive use of node- and measurement indexing the procedure is explained for one node, with this node referred to as 0--node. 
+\begin{figure}
 \centering
 \includegraphics[width = \textwidth]{algorithm_flowchart.pdf}
 \caption{Algorithm flowchart}\label{fig:algorithm_flow}
 \end{figure}
 
 \section{Predict target position}
-To compare new measurements with existing hypotheses, we should predict their states to the same time as the measurements, which can be done with the Kalman filter `time update' equation (\ref{eq:kalman_timeUpdate}). The residual covariance and optimal kalman gain (\ref{eq:kalman_measurementUpdate_precalc}), which is a part of the `measurement update' sequence of a Kalman filter are also calculated as the residual covariance is needed in the gating.
+To compare new measurements with existing hypotheses, we should predict their states to the same time as the measurements, which can be done with the Kalman filter `time update' equation (\ref{eq:kalman_timeUpdate}). The residual covariance, optimal Kalman gain and filtered state covariance (\ref{eq:kalman_measurementUpdate_precalc}), which is a part of the `measurement update' sequence of a Kalman filter are also calculated as the residual covariance is needed in the gating and these matrices are not dependent on the measurement residual.
 \begin{equation}\label{eq:kalman_timeUpdate}
 \begin{split}
-\V{\bar{x}}_{k+1} 	&= \M{\Phi} \V{\hat{x}}_k \\
-\M{\bar{P}}_{k+1}	&= \M{\Phi} \M{\hat{P}}_k  \M{\Phi}^T + \M{Q} \\
+\V{\bar{x}}_1 	&= \M{\Phi}(\Delta T_R) \V{x}_0 \\
+\M{\bar{P}}_1	&= \M{\Phi}(\Delta T_R) \M{P}_0  \M{\Phi}^T(\Delta T_R) + \M{Q}(\Delta T_R) \\
 \end{split}
 \end{equation}
 \begin{equation}\label{eq:kalman_measurementUpdate_precalc}
 \begin{split}
-\M{S}_k	&= \M{H}\M{\bar{P}}_k \M{H}^T + \M{R} \\
-\M{K}_k &= \M{\bar{P}}_k \M{H}^T \M{S}_k^{-1} \\
+\M{S}_1		&= \M{H}\M{\bar{P}}_1 \M{H}^T + \M{R}_{Radar} \\
+\M{K}_1 	&= \M{\bar{P}}_1 \M{H}^T \M{S}_1^{-1} \\
+\M{\hat{P}}_1 &= \left( \M{I} - \M{K} \M{H} \right) \M{\bar{P}}_0 \\
 \end{split}
 \end{equation}
-
 \begin{equation*}
 \begin{split}
-\V{\bar{x}}	&= \text{predicted state} \\
-\V{\hat{x}} &= \text{filtered state} \\
-\M{\bar{P}} &= \text{predicted state covariance} \\
-\M{\hat{P}} &= \text{filtered state covariance} \\
-\M{Q}		&= \text{system noise covariance} \\
-k  			&= \text{time index} \\
+\V{\bar{x}}		&= \text{predicted state} \\
+\V{x}_0 		&= \text{origin node state} \\
+\M{\bar{P}} 	&= \text{predicted state covariance} \\
+\M{P}_0 		&= \text{origin node state covariance} \\
+\M{\hat{P}}_1 	&= \text{filtered state covariance} \\
+\M{Q}			&= \text{system noise covariance} \\
+\M{S}			&= \text{Covariance innovation} \\
+\M{K}			&= \text{Kalman gain} \\
+\Delta T_R 		&= \text{Radar time period} \\
 \end{split}
 \end{equation*}
 
 \section{Gate and Create new hypotheses}
-To limit the number of hypotheses each leaf node have make, the measurements are gated based on the leaf nodes predicted covariance and a set confidence level. The size of the gate (Figure~\ref{fig:gate_illustration}) will reflect how insecure the prediction is, which is a function of how many detections and missed detections the leaf node have had. The gate is defined as \gls{nis} less that a threshold set by the \(\chi^2\)--distribution \gls{cdf} with two degrees of freedom and a set confidence value. A set of confidence levels and belonging \(\chi^2\) \gls{cdf} values are listed in Table~\ref{tab:chi_square}.
+To limit the number of hypotheses the leaf node have to create, the measurements are gated based on the leaf node's predicted covariance and a set confidence value. The size of the gate (Figure~\ref{fig:gate_illustration}) will reflect how insecure the prediction is, which is a function of how many detections and missed detections the leaf node and its parents have had. The gate is defined as \gls{nis} less that a threshold set by the \(\chi^2\)--distribution \gls{cdf} with as many degrees of freedom as the measurement, two degrees of freedom for a maritime radar, and a set confidence value. A set of confidence levels and belonging \(\chi^2\) \gls{cdf} values are listed in Table~\ref{tab:chi_square}. The measurement residual and \gls{nis} is calculated for each measurement, and the measurements that does not pass the test are discarded.
 \begin{equation}\label{eq:gate}
 \begin{gathered}
-\V{\tilde{z}} = \V{z} - \M{H}\V{\bar{x}} \\
+\V{\tilde{z}} = \V{z} - \M{H}\V{\bar{x}}_1 \\
 NIS = \V{\tilde{z}}^T	\M{S}^{-1} \V{\tilde{z}} \leq \eta^2
 \end{gathered}
 \end{equation}
@@ -194,33 +206,56 @@ Confidence 	& 70\% 	& 80\% 	& 90\% 	& 95\% 	& 97.5\% 	& 99\% 	& 99.5\% \\
 \end{figure}
 
 \subsection{Zero hypothesis}
-To account for the possibility that the target is not present in this scan, a \emph{zero} hypothesis, or \emph{dummy} hypothesis as it is sometimes called, is generated with the predicted state and covariance.
+To account for the possibility that the target is not present in this scan, a \emph{zero} hypothesis, or \emph{dummy} hypothesis as it is sometimes called, is generated with the predicted state and covariance \(\V{\bar{x}}_0, \M{\bar{P}}_0\). This node is numbered 0 in Figure~\ref{fig:hyp_tree} and~\ref{fig:hyp_forest}.
 
 \subsection{Pure radar hypotheses}
-For every radar measurement inside the gate in (\ref{eq:gate}), a new track hypothesis is generated with filtered state and covariance according to regular Kalman measurement update equations (\ref{eq:kalman_measurementUpdate}).
+For every radar measurement inside the gate in (\ref{eq:gate}), a new track hypothesis is generated with filtered state and covariance according to the regular Kalman `measurement update' equation (\ref{eq:kalman_filter_state}). These hypotheses are numbered incrementally from 1 and upwards.
 \begin{equation}
-\begin{split}
-\V{\tilde{y}}	&= \V{z} - \M{H} \V{\bar{x}} \\
-\M{S}			&= \M{H} \M{\bar{P}} \M{H}^T + \M{R} \\
-\M{K} 			&= \M{\bar{P}} \M{H}^T \M{S}^{-1} \\
-\V{\hat{x}}(k) 	&= \V{\bar{x}} + \M{K} \V{\tilde{y}} \\
-\M{\hat{P}}(k) 	&= \left( \M{I} - \M{K} \M{H} \right) \M{\bar{P}}
-\end{split}
-\label{eq:kalman_measurementUpdate}
+\V{\hat{x}} = \V{\bar{x}}_1 + \M{K} \V{\tilde{z}}
+\label{eq:kalman_filter_state}
 \end{equation}
 
 \subsection{Combined radar and AIS hypotheses}\label{subsec:combined_radar_and_ais_hypotheses}
 As elaborated in Section~\ref{sec:ais_preprocessing} all AIS measurements are preprocessed to remove out-of-order messages and ID-swap errors. And for each radar scan, only the latest AIS update from each target (\gls{mmsi} number) are passed through to the MHT tracking loop.
 
-For every (predicted) \gls{ais} measurement, there are generated a new complete set of hypotheses consisting of the \gls{ais} measurement and all the radar measurements inside the gate. This will lead to a large number of new hypotheses, but since the number of \gls{ais} measurements inside any gate at any time will seldom be larger than one, and in most cases zero, this will not cause any substantially larger explosion in the number of track hypotheses that the already exponentially nature of any \gls{mht}.% Since both the radar- and \gls{ais} measurement have the same process noise, the fused estimate will have an uncertainty area about 70 percent of the pure radar measurement, whereas the uncertainty would be 50 percent without common process noise~\cite{Bar-Shalom1986}.
-
-Since the AIS measurements originates before the radar measurement, the fusion is carried out in two steps as a sequential update~\cite{Bar-Shalom1995}. 
-\begin{figure}[H]
+\begin{figure}
 \centering
 \includegraphics[width = .8\textwidth]{Figures/AIS_gating.pdf}
 \caption{AIS gating}\label{fig:ais_gating}
 \end{figure}
-To get a more accurate score when summing two measurements, we are first predicting the origin hypothesis to the time of the AIS measurement. This predicted state is then filtered with the AIS measurement, giving rise for a new state, covariance and \gls{nis}. The \gls{ais} score is then calculated based on how good this intermittent prediction matches the AIS measurement. The new state is then predicted to the time of the radar measurement, which is most likely not at the same location as the original prediction. This prediction is then filtered with the radar measurement, and a radar score is calculated. The new hypothesis are given the accumulative score for the radar and \gls{ais}. This process is repeated for each new radar measurement in the gate.
+
+The integration of AIS measurements into the MHT framework is not obvious and multiple approaches is possible. The first step in any approach would be to decide which AIS measurements the leaf node shall consider. This leads to two alternatives; compare and gate at the AIS message time or the radar measurements time. 
+
+If gating at AIS time, the node would have to be predicted to the time of the all the different AIS measurements received since last scan. Since most maritime radars operate between 24 and 48 \gls{rpm} and the AIS time is always integer, a maximum of 2 different AIS times will exist in between two radar scans, making this approach feasible. Since each AIS measurement can have different accuracy and measurement covariance, the gating would have to be carried out one AIS measurement at a time with its own covariance residual. For all AIS measurement inside their gates, a filtered state and covariance is calculated and predicted forward to the radar measurements time. This prediction is then used to gate radar measurements and create a fused node for each radar measurement inside this gate.
+
+%Another approach would be to use the predicted AIS measurements at the radar time and gate them based on the predicted origin node state \(\V{\hat{x}}_1\).
+
+
+%For every (predicted) \gls{ais} measurement inside the gate, it is generated a new complete set of hypotheses consisting of the \gls{ais} measurement and all the radar measurements inside the gate. This can lead to a large number of new hypotheses, but since the number of \gls{ais} measurements inside any gate at any time will seldom be larger than one, and in most cases zero, this will not cause any substantially larger explosion in the number of track hypotheses that the already exponentially nature of any \gls{mht}.
+
+%Since the AIS measurements originates before the radar measurement, the fusion is carried out in two steps as a sequential update~\cite{Bar-Shalom1995}. The key idea is to used the original AIS measurement when filtering the state, and the predicted AIS measurement to enable gating alongside radar measurement via synchronization. The first step in the fusion process is to filter the origin node with the AIS measurement. This is carried out by predicting the origin state (again) (\ref{eq:predicted_origin_state_ais_time}), but this time to the time of the AIS measurement (\ref{eq:ais_time_delta}), which can vary for the different AIS measurement inside the gate.
+\begin{equation}\label{eq:ais_time_delta}
+\Delta T_{AIS} = t_{AIS} - t_{0}
+\end{equation}
+\begin{equation}\label{eq:predicted_origin_state_ais_time}
+\begin{split}
+\V{\bar{x}}_2 	&= \M{\Phi}(\Delta T_{AIS}) \V{x}_0 \\
+\M{\bar{P}}_2	&= \M{\Phi}(\Delta T_{AIS}) \M{P}_0  \M{\Phi}^T(\Delta T_R) + \M{Q}(\Delta T_R) \\
+\end{split}
+\end{equation}
+This predicted state and covariance is then filtered with the original AIS measurement (\ref{eq:filtered_origin_ais_state}).
+\begin{equation}\label{eq:filtered_origin_ais_state}
+\begin{split}
+\V{\tilde{z}}	&= \V{z}_{AIS} - \M{H} \V{\bar{x}}_2 \\
+\M{S}_2			&= \M{H} \M{\bar{P}}_2 \M{H}^T + \M{R}_{AIS} \\
+\M{K} 			&= \M{\bar{P}} \M{H}^T \M{S}^{-1} \\
+\V{\hat{x}}_2 	&= \V{\bar{x}} + \M{K} \V{\tilde{y}} \\
+\M{\hat{P}}(k) 	&= \left( \M{I} - \M{K} \M{H} \right) \M{\bar{P}}
+\end{split}
+\end{equation}
+
+
+%To get a more accurate score when summing two measurements, we are first predicting the origin hypothesis to the time of the AIS measurement. This predicted state is then filtered with the AIS measurement, giving rise for a new state, covariance and \gls{nis}. The \gls{ais} score is then calculated based on how good this intermittent prediction matches the AIS measurement. The new state is then predicted to the time of the radar measurement, which is most likely not at the same location as the original prediction. This prediction is then filtered with the radar measurement, and a radar score is calculated. The new hypothesis are given the accumulative score for the radar and \gls{ais}. This process is repeated for each new radar measurement in the gate.
 
 \subsection{Pure AIS hypotheses}\label{subsec:pure_ais_hypotheses}
 If no radar measurements are present in the gate while there are AIS measurements present inside the gate, pure AIS hypotheses are created. This can be the situation when a target is broadcasting an AIS message, but is either in radar shadow or is not detected by the radar for any reason. These hypotheses are not created when one or more radar measurements are available, based on the assumption that if a radar measurement is present, the difference between a fused hypothesis and a pure AIS hypothesis is quite small since the AIS measurement covariance typically will be much smaller than the radar measurement covariance, leading to a fused state very close to the AIS measurement.
@@ -282,11 +317,11 @@ There are two sets of constraints (\ref{eq:my_constraints}), one equality and on
 \end{aligned}
 \label{eq:my_constraints}
 \end{equation}
-\(\M{A_1}\) is a \(n_1 \times m\) binary matrix with \(n_1\) real measurements and \(m\) track hypotheses (all leaf nodes), where \(\M{A_1}(l,i)=1\) if hypothesis \(l\) are utilizing measurement \(i\), \(0\) otherwise. The measurements and hypothesis are indexed by the order they are visited by \gls{dfs}. \(\M{A_2}\) is an \(N_2 \times m\) binary matrix where \(N_2\) is the number of targets in the cluster and \(\M{A_2}(l,j)=1\) if hypothesis \(l\) belongs to target \(j\). \(\V{b_1}\) is a \(n_1\) long vector with ones and \(\V{b_2}\) is a \(N_2\) long vector with ones. \(\V{c}\) is a \(m\) long vector with a measure of the goodness of the track hypotheses. For example, in Figure~\ref{fig:hyp-tree} at time step 2, the \(\M{A}\) matrices and \(\V{C}\) vector would be (\ref{eq:example_matrices}).
+\(\M{A_1}\) is a \(n_1 \times m\) binary matrix with \(n_1\) real measurements and \(m\) track hypotheses (all leaf nodes), where \(\M{A_1}(l,i)=1\) if hypothesis \(l\) are utilizing measurement \(i\), \(0\) otherwise. The measurements and hypothesis are indexed by the order they are visited by \gls{dfs}. \(\M{A_2}\) is an \(N_2 \times m\) binary matrix where \(N_2\) is the number of targets in the cluster and \(\M{A_2}(l,j)=1\) if hypothesis \(l\) belongs to target \(j\). \(\V{b_1}\) is a \(n_1\) long vector with ones and \(\V{b_2}\) is a \(N_2\) long vector with ones. \(\V{c}\) is a \(m\) long vector with a measure of the goodness of the track hypotheses. For example, in Figure~\ref{fig:hyp_forest} at time step 2, the \(\M{A}\) matrices and \(\V{C}\) vector would be (\ref{eq:example_matrices}).
 \begin{figure}[H]
 \centering
-\includegraphics[clip, trim=0cm 2.5cm 0cm 2.5cm, width = .7\textwidth]{Track-tree}
-\caption{Track hypothesis tree}\label{fig:hyp-tree}
+\includegraphics[clip, trim=0cm 2.5cm 0cm 2.5cm, width = .7\textwidth]{Track-forest}
+\caption{Track hypotheses forest}\label{fig:hyp_forest}
 \end{figure}
 
 \begin{equation}
@@ -320,11 +355,11 @@ The explicit enumeration that becomes necessary when creating these \(\M{A}\) ma
 There are a lot of off-the-shelf \gls{ilp} and \gls{milp} solvers on the marked, both free open source and commercial. Since the problem in this report is formulated on standard form, it can easily be executed on several solvers, and we can compare runtime and performance. The performance difference of some of these where tested in~\cite{Liland_2017}, where the difference where found marginal, probably because of the nature of the problem. %The read/write overhead, building problem vs. solving problem, etc. 
 
 
-% \section{ILP Pruning}
-
 \section{Dynamic window}
+The sliding window size (N) could be a static design parameter or a function of the runtime of that tree, which reflects the overall size of the tree. This enables the system to adapt its core parameters to guarantee its runtime demands. 
 
 \section{N-Scan pruning}
+
 
 \section{Track termination}
 
