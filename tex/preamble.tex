@@ -2,6 +2,7 @@
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage{textcomp}
+\usepackage{titling,lipsum}
 
 %% NTNU packages
 \usepackage[lmargin=25mm,rmargin=25mm,tmargin=27mm,bmargin=30mm]{geometry}
@@ -31,6 +32,7 @@
 \renewcommand*\contentsname{Table of Contents}
 \pagestyle{fancy}
 \fancyhf{}
+\fancyfoot[LE,RO]{\thepage} % Left side on Even pages; Right side on Odd pages
 \renewcommand{\chaptermark}[1]{\markboth{\chaptername\ \thechapter.\ #1}{}}
 \renewcommand{\sectionmark}[1]{\markright{\thesection\ #1}}
 \renewcommand{\headrulewidth}{0.1ex}
@@ -57,10 +59,11 @@
 \usepackage{flafter}
 \usepackage{csquotes}
 \usepackage{listings}
-\usepackage[toc, page]{appendix}
+\usepackage[toc]{appendix}
 \usepackage[nonumberlist,acronym]{glossaries}
 \usepackage{nomencl}
-\usepackage{url}
+\usepackage[hyphens]{url}
+\urlstyle{same}
 \usepackage{booktabs}
 \usepackage{tabularx}
 \usepackage{cleveref}
