@@ -247,11 +247,11 @@ Another approach would be to use the predicted AIS measurements at the radar tim
 In this work, the first approach is used for its assumed better performance and utilization of original data rather than predicted data. 
 
 \subsection{Predict to AIS times}
-To gate the AIS measurements, we first have to predict the target state and covariance for each of the AIS time stamps (\ref{eq:ais_time_delta}) in the received AIS measurements (\ref{eq:predicted_origin_state_ais_time}). Since AIS only transmits a single integrity status, better or worse than 10 meter, maximum two possible \(\M{R}_{AIS}\) must be considered. With maximum two different time stamps and two different accuracies, a maximum of four different gates must be considered.
+To gate the AIS measurements, we first have to predict the target state and covariance (\ref{eq:predicted_origin_state_ais_time}) for each of the AIS time stamps (\ref{eq:ais_time_delta}) in the received AIS measurements. Since AIS only transmits a single integrity status, better or worse than 10 meter, maximum two possible \(\M{R}_{AIS}\) must be considered. With maximum two different time stamps and two different accuracies, a maximum of four different gates must be considered.
 \begin{equation}\label{eq:ais_time_delta}
 \begin{split}
 \Delta T_{AIS_1} &= t_{AIS_1} - t_{0} \\
-\Delta T_{AIS_1} &= t_{AIS_1} - t_{0} \\
+\Delta T_{AIS_2} &= t_{AIS_2} - t_{0} \\
 \end{split}
 \end{equation}
 
@@ -269,10 +269,10 @@ To gate the AIS measurements, we first have to predict the target state and cova
 \end{equation}
 
 \subsection{Gate, filter, score and create new nodes}
-For each leaf node all AIS measurements are gated with the gate matching their time and accuracy. The measurements that pass the gating is then filtered with the matching prediction time and covariance, giving rise to an intermittent node. This node is scored according to (\ref{eq:ais_score_function}), which is a modified version of the radar measurement score function (\ref{eq:radar_score_function}).
+For each leaf node all AIS measurements are gated with the gate matching their time and accuracy. The measurements that pass the gating is then filtered with the predicted state and covariance matching its time, giving rise to an intermittent node. This node is scored according to (\ref{eq:ais_score_function}), which is a modified version of the radar measurement score function (\ref{eq:radar_score_function}). The first difference being that the probability of detection is changed with the AIS probability of receive, since there is always a certain percentage of transmitted AIS messages that are not received, and the second difference being that the expected number of extraneous measurements is now a the expected number of AIS messages divided on the area of observation. 
 
 \begin{equation}\label{eq:ais_score_function}
-\mathrm{NLLR} = \frac{1}{2} \left[ {\tilde{z}}^{T} {S}^{-1} \tilde{z} \right] + \ln \frac{\lambda_{ex} |2 \pi S|^{1/2}} {1}			
+\mathrm{NLLR} = \frac{1}{2} NIS + \ln \frac{\lambda_{AIS} |2 \pi S|^{1/2}} {P_r}			
 \end{equation}
 
 
