@@ -143,25 +143,27 @@ The aim of this section is to outline the major steps in the MHT module and the 
  The algorithm described in the three following  sections are repeated for every leaf node in the forest. To avoid an extensive use of node- and measurement indexing the procedure is explained for one leaf node, with this node referred to as 0--node, and is repeated for all leaf nodes in the forest. 
 \begin{figure}
 \centering
-\includegraphics{algorithm_flowchart.pdf}
+\includegraphics[width = \textwidth]{algorithm_flowchart.pdf}
 \caption{Algorithm flowchart}\label{fig:algorithm_flow}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[height = .4\textheight]{Figures/Hypotheses_when_turning.PNG}
+\caption{Hypotheses when turning}\label{fig:hypotheses_when_turning}
 \end{figure}
 
 \section{Process radar measurements}
 \subsection{Predict to radar time}
-To compare new radar measurements with existing hypotheses, we should predict their states to the same time as the radar measurements, which can be done with the Kalman filter `time update' equation (\ref{eq:kalman_timeUpdate}) and the motion model from Section~\ref{sec:motion-model}. The residual covariance, optimal Kalman gain and filtered state covariance (\ref{eq:kalman_measurementUpdate_precalc}), which is a part of the `measurement update' sequence of a Kalman filter are also calculated as the residual covariance is needed in the gating and these matrices are not dependent on the measurement residual.
+To compare new radar measurements with existing hypotheses, we should predict their states to the same time as the radar measurements, which can be done with the Kalman filter `time update' equation (\ref{eq:kalman_timeUpdate}) and the motion model from Section~\ref{sec:motion-model}. The residual covariance (\ref{eq:residual_covariance}), which is a part of the `measurement update' sequence of a Kalman filter are also calculated as the residual covariance is needed in the gating and these matrices are not dependent on the measurement residual.
 \begin{equation}\label{eq:kalman_timeUpdate}
 \begin{split}
 \V{\bar{x}}_1 	&= \M{\Phi}(\Delta T_R) \V{x}_0 \\
 \M{\bar{P}}_1	&= \M{\Phi}(\Delta T_R) \M{P}_0 \M{\Phi}^T(\Delta T_R) + \M{Q}(\Delta T_R) \\
 \end{split}
 \end{equation}
-\begin{equation}\label{eq:kalman_measurementUpdate_precalc}
-\begin{split}
-\M{S}_1		&= \M{H}\M{\bar{P}}_1 \M{H}^T + \M{R}_{Radar} \\
-\M{K}_1 	&= \M{\bar{P}}_1 \M{H}^T \M{S}_1^{-1} \\
-\M{\hat{P}}_1 &= \left( \M{I} - \M{K} \M{H} \right) \M{\bar{P}}_1 \\
-\end{split}
+\begin{equation}\label{eq:residual_covariance}
+\M{S}_1	= \M{H}\M{\bar{P}}_1 \M{H}^T + \M{R}_{Radar}
 \end{equation}
 \begin{equation*}
 \begin{split}
@@ -169,10 +171,7 @@ To compare new radar measurements with existing hypotheses, we should predict th
 \V{x}_0 		&= \text{origin node state} \\
 \M{\bar{P}} 	&= \text{predicted state covariance} \\
 \M{P}_0 		&= \text{origin node state covariance} \\
-\M{\hat{P}}_1 	&= \text{filtered state covariance} \\
 \M{Q}			&= \text{system noise covariance} \\
-\M{S}			&= \text{Covariance innovation} \\
-\M{K}			&= \text{Kalman gain} \\
 \Delta T_R 		&= \text{Radar time period} \\
 \end{split}
 \end{equation*}
@@ -208,7 +207,7 @@ Confidence 	& 70\% 	& 80\% 	& 90\% 	& 95\% 	& 97.5\% 	& 99\% 	& 99.5\% \\
 
 The scoring used in this tracking system is based on a dimensionless score function by Bar-Shalom~\cite{Bar-Shalom2007}. His paper discusses the issue of scoring measurement-to-track associations and comparing scores based on different numbers of measurement and measurement dimensions. He proposes a dimensionless \emph{likelihood ratio}, which is the \gls{pdf} of a measurement having originating from the track, to the \gls{pdf} of it not originating from the track.
 
-\todo[inline]{Fill in the main steps in the derivation}
+% \todo[inline]{Fill in the main steps in the derivation}
 Each \gls{track hypothesis} is scored according to (\ref{eq:radar_score_function}). Where the cumulative score being the sum through time since we are using the logarithm of the likelihood ration. For the fused hypotheses, their score is the cumulative score of both the measurements, giving them a better score reflecting that they are more likely hypotheses that pure radar or AIS hypotheses. 
 \begin{equation}\label{eq:radar_score_function}
 \mathrm{NLLR} = \frac{1}{2} NIS + \ln \frac{\lambda_{ex} |2 \pi S|^{1/2}} {P_D}		
@@ -221,13 +220,21 @@ Each \gls{track hypothesis} is scored according to (\ref{eq:radar_score_function
 To account for the possibility that the target is not present in this scan, a \emph{zero} hypothesis, or \emph{dummy} hypothesis as it is sometimes called, is generated with the predicted state and covariance \(\V{\bar{x}}_1, \M{\bar{P}}_1\). This node is numbered 0 in Figure~\ref{fig:hyp_tree} and~\ref{fig:hyp_forest}.
 
 \subsubsection{Pure radar hypotheses}
-For every radar measurement inside the gate in (\ref{eq:gate}), a new track hypothesis is generated with filtered state and covariance according to the regular Kalman `measurement update' equation (\ref{eq:kalman_filter_state}). These hypotheses are numbered incrementally from 1 and upwards.
-\begin{equation}
-\V{\hat{x}}_1 = \V{\bar{x}}_1 + \M{K} \V{\tilde{z}}
-\label{eq:kalman_filter_state}
+For every radar measurement inside the gate in (\ref{eq:gate}), a new track hypothesis is generated with filtered state and covariance according to the regular Kalman `measurement update' equation (\ref{eq:kalman_measurement_update}). These hypotheses are numbered incrementally from 1 and upwards.
+\begin{equation}\label{eq:kalman_measurement_update}
+\begin{split}
+\M{K}_1 	&= \M{\bar{P}}_1 \M{H}^T \M{S}_1^{-1} \\
+\V{\hat{x}}_1 &= \V{\bar{x}}_1 + \M{K} \V{\tilde{z}} \\
+\M{\hat{P}}_1 &= \left( \M{I} - \M{K} \M{H} \right) \M{\bar{P}}_1 \\
+\end{split}
 \end{equation}
-
-
+\begin{equation*}
+\begin{split}
+\M{K}			&= \text{Kalman gain} \\
+\M{S}			&= \text{Covariance innovation} \\
+\M{\hat{P}}_1 	&= \text{filtered state covariance} \\
+\end{split}
+\end{equation*}
 
 \section{Process AIS measurements}\label{sec:process_ais_measurements}
 As elaborated in Section~\ref{sec:ais_preprocessing} all AIS measurements are preprocessed to remove out-of-order messages and ID-swap errors. And for each radar scan, only the latest AIS update from each target (\gls{mmsi} number) are passed through to the MHT tracking loop.
@@ -238,7 +245,7 @@ As elaborated in Section~\ref{sec:ais_preprocessing} all AIS measurements are pr
 \caption{AIS gating}\label{fig:ais_gating}
 \end{figure}
 
-The integration of AIS measurements into the MHT framework is not obvious and multiple approaches is possible. The first step in any approach would be to decide which AIS measurements the leaf node shall consider. This leads to two alternatives; compare and gate at the AIS message time or the radar measurements time. 
+The integration of AIS measurements into the MHT framework is not obvious and multiple approaches is possible. Since the AIS and radar measurement originates from different times, the fusion process is done as a sequential update~\cite{Bar-Shalom1995}. The first step in any approach would be to decide which AIS measurements the leaf node shall consider. This leads to two alternatives; compare and gate at the AIS message time or the radar measurements time. 
 
 If gating at AIS time, the node would have to be predicted to the time of the all the different AIS measurements received since last scan. Since most maritime radars operate between 24 and 48 \gls{rpm} and the AIS time is always integer, a maximum of 2 different AIS times will exist in between two radar scans, making this approach feasible. Since each AIS measurement can have different accuracy and measurement covariance, the gating would have to be carried out one AIS measurement at a time with its own covariance residual. For all AIS measurement inside their gates, a filtered state and covariance is calculated and predicted forward to the radar measurements time. This prediction is then used to gate radar measurements and create a fused node for each radar measurement inside this gate.
 
@@ -268,62 +275,60 @@ To gate the AIS measurements, we first have to predict the target state and cova
 \end{split}
 \end{equation}
 
-\subsection{Gate, filter, score and create new nodes}
-For each leaf node all AIS measurements are gated with the gate matching their time and accuracy. The measurements that pass the gating is then filtered with the predicted state and covariance matching its time, giving rise to an intermittent node. This node is scored according to (\ref{eq:ais_score_function}), which is a modified version of the radar measurement score function (\ref{eq:radar_score_function}). The first difference being that the probability of detection is changed with the AIS probability of receive, since there is always a certain percentage of transmitted AIS messages that are not received, and the second difference being that the expected number of extraneous measurements is now a the expected number of AIS messages divided on the area of observation. 
+\subsection{Gate, filter and score}\label{sec:ais_gate_filter_score}
+For each leaf node all AIS measurements are gated with the gate matching their time and accuracy. The measurements that pass the gating is then filtered with the predicted state and covariance matching its time, giving rise to an intermittent node (\ref{eq:filtered_ais_node}).
+\begin{equation}\label{eq:filtered_ais_node}
+\V{\hat{x}}_1 = \V{\bar{x}}_1 + \M{K} \V{\tilde{z}}
+\end{equation}
+
+This node is scored according to (\ref{eq:ais_score_function}), which is a modified version of the radar measurement score function (\ref{eq:radar_score_function}). The first difference being that the probability of detection is changed with the AIS probability of receive, since there is always a certain percentage of transmitted AIS messages that are not received, and the second difference being that the expected number of extraneous measurements is now a the expected number of AIS messages divided on the area of observation. 
 
 \begin{equation}\label{eq:ais_score_function}
 \mathrm{NLLR} = \frac{1}{2} NIS + \ln \frac{\lambda_{AIS} |2 \pi S|^{1/2}} {P_r}			
 \end{equation}
 
+\subsection{Predict to radar time}
+All gated and filtered states from Section~\ref{sec:ais_gate_filter_score} is then predicted forward to  the time of the radar measurements. This time delta will differ based on the time of the AIS measurement. Radar measurements are then gated for each predicted state and covariance, whereon a fused hypothesis are created for each radar measurement inside the gate. If there is no radar measurements inside the gate, a pure AIS hypothesis are created. 
 
 \subsubsection{Fused hypotheses}
-Since the AIS measurements originates before the radar measurement, the fusion is carried out in two steps as a sequential update~\cite{Bar-Shalom1995}. The key idea is to used the original AIS measurement when filtering the state, and the predicted AIS measurement to enable gating alongside radar measurement via synchronization. The first step in the fusion process is to filter the origin node with the AIS measurement. This is carried out by predicting the origin state (again) (\ref{eq:predicted_origin_state_ais_time}), but this time to the time of the AIS measurement (\ref{eq:ais_time_delta}), which can vary for the different AIS measurement inside the gate.
-
-This predicted state and covariance is then filtered with the original AIS measurement (\ref{eq:filtered_origin_ais_state}).
-\begin{equation}\label{eq:filtered_origin_ais_state}
-\begin{split}
-\V{\tilde{z}}	&= \V{z}_{AIS} - \M{H} \V{\bar{x}}_2 \\
-\M{K} 			&= \M{\bar{P}} \M{H}^T \M{S}^{-1} \\
-\V{\hat{x}}_2 	&= \V{\bar{x}} + \M{K} \V{\tilde{y}} \\
-\M{\hat{P}}(k) 	&= \left( \M{I} - \M{K} \M{H} \right) \M{\bar{P}}
-\end{split}
-\end{equation}
+The predicted state and covariance is then filtered with the gated radar measurement according to (\ref{eq:kalman_measurement_update}). The radar measurement is scored according to (\ref{eq:radar_score_function}), and the hypothesis score is the sum of the AIS and radar score.
 
 \subsubsection{Pure AIS hypotheses}\label{subsec:pure_ais_hypotheses}
-If no radar measurements are present in the gate while there are AIS measurements present inside the gate, pure AIS hypotheses are created. This can be the situation when a target is broadcasting an AIS message, but is either in radar shadow or is not detected by the radar for any reason. These hypotheses are not created when one or more radar measurements are available, based on the assumption that if a radar measurement is present, the difference between a fused hypothesis and a pure AIS hypothesis is quite small since the AIS measurement covariance typically will be much smaller than the radar measurement covariance, leading to a fused state very close to the AIS measurement.
-
-\begin{figure}[H]
-\centering
-\includegraphics[height = .3\textheight]{Figures/Hypotheses_when_turning.PNG}
-\caption{Hypotheses when turning}\label{fig:hypotheses_when_turning}
-\end{figure}
+If no radar measurements are present in the gate, pure AIS hypotheses are created. This can be the situation when a target is broadcasting an AIS message, but is either in radar shadow or is not detected by the radar for any reason. These hypotheses are not created when one or more radar measurements are available, based on the assumption that if a radar measurement is present, the difference between a fused hypothesis and a pure AIS hypothesis is quite small since the AIS measurement covariance typically will be much smaller than the radar measurement covariance, leading to a fused state very close to the AIS measurement. The pure AIS hypothesis will use its predicted state, covariance and score, somewhat similar to radar zero hypotheses.
 
 \section{Clustering}
-The problem of finding the globally optimal set of track hypotheses increases exponentially with the number of hypotheses in the problem. To reduce the size of the problem, it is desirable to split it into smaller independent problems. Both because it enables parallel computation and it reduces the total cost of solving the problem. Track trees that have common measurements must be solved together, since they can have mutual exclusive leaf nodes. (Remember that each target can maximum produce on radar measurement at each scan.) The clustering can be done efficiently through \gls{bfs} or \gls{dfs} on a graph made from the hypothesis tree.
+The problem of finding the globally optimal set of track hypotheses increases exponentially with the number of hypotheses in the problem. To reduce the size of the problem, it is desirable to split it into smaller independent problems. Both because it enables parallel computation and it reduces the total cost of solving the problem. Track trees that have common measurements must be solved together, since they can have mutual exclusive leaf nodes. The clustering can be done efficiently through \gls{bfs} or \gls{dfs} on a graph made from the hypothesis tree.
 
 By constructing a 0--1 adjacency matrix describing the connection between all the nodes in the track forest, the clustering problem is equivalent to the \emph{connected components} problem in graph theory~\cite{Chen2015}.
 
-\section{Optimal data association}
+\section{Optimal data association}\label{sec:optim_data_association}
+The aim of this section is to elaborate the use of ILP to solve the data association problem in MHT that arises when there are multiple, possibly mutual exclusive, possibilities of measurement arrangements within the existing set of tracks.
+
 When the targets are divided into independent clusters, each of them can be treated as a global problem where we want to minimize the cost or maximize the score of the selected \glspl{track hypothesis} (leaf nodes). The selected \glspl{track hypothesis} must also fulfil the constraints, that each measurement can only be a part of one track, and that minimum and maximum one track hypothesis can be selected from each target. Since only binary values, selected or not selected, is possible for selection of hypotheses, the problem becomes an \gls{ilp}. In the case where a cluster is only containing one target tree, the best hypothesis can be selected by running a search among the leaf nodes after the highest score, since none of the leaf nodes are excluding other leaf nodes in other target trees. This will often be the case for targets that are largely spaced out, and their gates are not and have not overlapped in a while. For any other case, where there are two or more targets in a cluster, the procedure in Section~\ref{subsec:integer_linear_programming} must be carried out. 
 
 \subsection{Integer Linear programming}\label{subsec:integer_linear_programming}
-The essence of any optimization problem is a cost function and a set of constraints. In our problem, we want to select the combination of hypotheses (leaf nodes) that gives the highest score / lowest cost, while not selecting any measurement more than one time and ensure that we select minimum and maximum one hypothesis from each target.
+The essence of any optimization problem is a cost function and a set of constraints. In our problem, we want to select the combination of hypotheses (leaf nodes) that gives the highest score / lowest cost, while not selecting any measurement more than one time and ensure that we select minimum and maximum one hypothesis from each target. 
 
-
-%%%%% CONTINUE HERE %%%%%%%
-
-Our cost vector \(\V{c}\) is 
-
- them all is (\ref{eq:general_objective_funtion}), where \(\V{c}\) is a vector of costs (minimize) or scores (maximize) and \(\V{\tau}\) is a selection vector, where each row in \(\V{c}\) and \(\V{\tau}\) represents one branch in the track hypothesis tree.
+Our score function is the sum of the selected node scores, and since we are using negative logarithmic scores the goal is to minimize the overall score, making the problem a minimum cost problem. Our cost vector \(\V{c}\) is made up from the scores of all the leaf nodes in the forest build by the trees clustered together, arranged in the order they are visited by a \gls{dfs}. The accompanying selection vector \( \V{\tau} \) is of the same dimension with boolean values, where the selected hypotheses are value 1 and all other is value 0. These two together form the objective function (\ref{eq:objective_funtion}).
 \begin{equation}
 \begin{aligned}
 & \underset{\V{\tau}}{\text{min}}
 & & \V{c}^T \V{\tau}
 \end{aligned}
-\label{eq:general_objective_funtion}
+\label{eq:objective_funtion}
 \end{equation}
 
-There are two sets of constraints (\ref{eq:my_constraints}), one equality and one inequality. The inequality constraints \(\M{A_1} \V{\tau} \leq \V{b_1}\) ensures that each measurement are maximum (but not minimum) used one time. The equality constraints \(\M{A_2} \V{\tau} = \V{b_2}\) ensures that minimum and maximum one track from each track tree is selected. The complete \gls{ilp} formulation becomes (\ref{eq:my_constraints}), where \(\V{\tau}\) is a binary vector with dimension equal the number of leaf nodes in the track forest.
+To ensure that we are selecting the same measurement maximum one time, a binary matrix \( \M{A_1} \) describing the association between nodes and measurements are created.\(\M{A_1}\) has as many rows are there are real measurement and as as many columns as there are hypotheses. All radar- and AIS measurement are real measurement, whereas zero nodes does not contain any real measurements. \( \M{A_1} \) has value 1 in the intersections of hypotheses and measurements that are associated, 0 elsewhere. The order of the columns in \( \M{A_1} \) is the same as the rows in \( \V{c} \) and \( \V{\tau} \). Since we are only limiting a maximum of one usage of each measurement and no minimum, the constraint becomes an inequality constraint (\ref{eq:inequality_constraint}) where \( \V{1} \) is a vector of ones with the same dimension as \( \V{\tau} \).
+\begin{equation}\label{eq:inequality_constraint}
+\M{A_1} \V{\tau} \leq \V{1}
+\end{equation}
+
+The second constraint we need to impose is that we need to select minimum and maximum one hypothesis from each tree. This can be done by creating a boolean matrix \( \M{A_2} \) which describes the relationship between hypotheses and trees / targets. \( \M{A_2} \) will have as many rows as there are targets in the cluster, and columns as \( \M{A_1} \). The intersections between hypotheses and targets that belong together is value 1, all other is value 0. Since this constraint has a fixed requirement, it is formulated as an equality constraint (\ref{eq:equality_constraint}) with \( \V{1} \) as in (\ref{eq:inequality_constraint}).
+\begin{equation}\label{eq:equality_constraint}
+\M{A_2} \V{\tau} = \V{1}
+\end{equation}
+
+The complete \gls{ilp} formulation becomes (\ref{eq:optim_formulation}), where \(\V{\tau}\) is a binary vector with dimension equal the number of leaf nodes in the track forest.
 \begin{equation}
 \begin{aligned}
 &	\underset{\V{\tau}}{\text{max}}
@@ -333,9 +338,10 @@ There are two sets of constraints (\ref{eq:my_constraints}), one equality and on
 &&&	\M{A_2} \V{\tau} = \V{b_2}	\\
 &&&	\V{\tau} \in {\{0,1\}}^{M}
 \end{aligned}
-\label{eq:my_constraints}
+\label{eq:optim_formulation}
 \end{equation}
-\(\M{A_1}\) is a \(n_1 \times m\) binary matrix with \(n_1\) real measurements and \(m\) track hypotheses (all leaf nodes), where \(\M{A_1}(l,i)=1\) if hypothesis \(l\) are utilizing measurement \(i\), \(0\) otherwise. The measurements and hypothesis are indexed by the order they are visited by \gls{dfs}. \(\M{A_2}\) is an \(N_2 \times m\) binary matrix where \(N_2\) is the number of targets in the cluster and \(\M{A_2}(l,j)=1\) if hypothesis \(l\) belongs to target \(j\). \(\V{b_1}\) is a \(n_1\) long vector with ones and \(\V{b_2}\) is a \(N_2\) long vector with ones. \(\V{c}\) is a \(m\) long vector with a measure of the goodness of the track hypotheses. For example, in Figure~\ref{fig:hyp_forest} at time step 2, the \(\M{A}\) matrices and \(\V{C}\) vector would be (\ref{eq:example_matrices}).
+
+An example based on Figure~\ref{fig:hyp_forest} at time step 2, where the \(\M{A}\) matrices and \(\V{C}\) vector would be (\ref{eq:example_matrices}).
 \begin{figure}[H]
 \centering
 \includegraphics[clip, trim=0cm 2.5cm 0cm 2.5cm, width = .7\textwidth]{Track-forest}
@@ -367,22 +373,30 @@ There are two sets of constraints (\ref{eq:my_constraints}), one equality and on
 \label{eq:example_matrices}
 \end{equation}
 
-The explicit enumeration that becomes necessary when creating these \(\M{A}\) matrices is exhaustive since the dimension of \(\V{\tau}$, which is equal to the number of leaf nodes in the track forest, can be very large. Both \(\M{A}_1\) and \(\M{A}_2\) grows quadratically with the number of track hypotheses and real measurements or number of targets respectively.
-
 \subsection{Solvers}
-There are a lot of off-the-shelf \gls{ilp} and \gls{milp} solvers on the marked, both free open source and commercial. Since the problem in this report is formulated on standard form, it can easily be executed on several solvers, and we can compare runtime and performance. The performance difference of some of these where tested in~\cite{Liland_2017}, where the difference where found marginal, probably because of the nature of the problem. %The read/write overhead, building problem vs. solving problem, etc. 
-
+The problem (\ref{eq:optim_formulation}) is formulated on standard form, which enables the use of existing off-the-shelf ILP solvers. There are a lot of off-the-shelf \gls{ilp} and \gls{milp} solvers on the marked, both free open source and commercial. The performance difference of some solvers where tested in~\cite{Liland_2017}, where the difference where found marginal,  most likely because each optimization problem is relatively small and the initialization and preprocessing of the solver and problem played a significant part of the runtime compared to the actual solving. In this work, Google Optimization Tools is used as interface between the programming language and the solver. The default solver CBC was used exclusively in this work as its performance was on par with the others tested in~\cite{Liland_2017}. 
 
 \section{Dynamic window}
-The sliding window size (N) could be a static design parameter or a function of the runtime of that tree, which reflects the overall size of the tree. This enables the system to adapt its core parameters to guarantee its runtime demands. 
+For any MHT to be realistic over time it need to have a sliding window removing the unused hypotheses N steps back in time. The sliding window size (N) could be a static design parameter or a function of the runtime of that tree, which reflects the overall size of the tree. This enables the system to adapt its core parameters to guarantee its runtime demands.
 
 \section{N-Scan pruning}
-
+To keep the computational cost within reasonable limits, it is necessary to limit the amount of time steps backwards in time that the algorithm computes. This is done by removing all branches but the active track hypothesis at the current root node, and assign the one remaining node as new root node. This procedure is graphically explained in Figure~\ref{fig:pruned_tree}, where a solid square frame indicates the current root node, and a dotted square frame indicates the new root node. The bold arrows in the figure represents the active track.
+\begin{figure}
+\centering
+\includegraphics[scale = .8]{Figures/Pruned-tree.pdf}
+\caption{N-scan pruning}\label{fig:pruned_tree}
+\end{figure}
 
 \section{Track termination}
+Since targets can disappear from the observation region both by leaving the radar range and by driving behind objects that puts them in a radar shadow, it is necessary to terminate these tracks. It is also desirable to terminate falsely initiated tracks as soon as possible, since a guidance system would steer clear of any objects reported to it. The first scenario, where the target is leaving the radar range can easily be detected and the track can be terminated quickly based on the predicted position of the target relative to our own position. The second scenario, can be approached in different ways depending on the available data and computational power. The simplest solution is to terminate all tracks where the selected node after each iteration have a score higher that a threshold. This could terminate tracks with consecutive miss detections, which is desirable for false tracks, but can lead to premature termination of true targets with temporarily low \gls{Pd}. This means that the termination threshold becomes a trade-of between killing false tracks and keeping targets with lower \gls{Pd} and shadowed targets. 
+
+A more advanced approach could be to utilize map data to estimate whether or not a target is in a radar shadow of land objects, and then make a decision on whether this target should be given a lower \gls{Pd} temporary or terminated based. This could also be done between targets if target extent is estimated, where targets behind other targets are given a lower \gls{Pd} to punish miss detections less.
+
+In this work, only range and score termination is implemented.
 
 \section{Track smoothing}
-\begin{figure}[H]
+After each iteration of the MHT algorithm a track list based on the selected hypotheses from Section~\ref{sec:optim_data_association} is passed forward to the operator and guidance system. Both human operators and guidance systems will try to predict the targets behaviour based on their historical track. To improve the visualisation for this purpose it is possible to smooth the tracks based on the real measurements in the track and masking the zero measurements in a Kalman smoother~\cite{Brown2012} with the same model as used in the predictions.
+\begin{figure}
 \centering
 \includegraphics[width = .9\textwidth]{Figures/track_smoothing.png}
 \caption{Track smoothing}\label{fig:track_smoothing}
