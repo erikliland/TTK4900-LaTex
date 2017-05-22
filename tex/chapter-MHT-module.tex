@@ -3,6 +3,8 @@
 \chapter{MHT Module}\label{chapter:mht-module}
 To create a complete tracking \emph{system}, rather than a tracking \emph{algorithm}, it is often necessary  to complement the main algorithm with support modules. The system, or module if it is a part of a bigger system, presented here is an extension of the pre master project~\cite{Liland_2017}. The aim of this chapter is to provide a complete walkthrough of the the track oriented MHT system developed in this thesis. The motion model which is used throughout the entire tracking system when predicting and filtering target behaviour is presented first. Next follows an overview of the algorithm used to initiate new tracks into the MHT algorithm, followed by the entire MHT tracking algorithm with all its sub-routines.
 
+It will be assumed throughout this thesis that radar data is processed, as outlined in Section~\ref{sec:radar_preprocessing}, into a set of points. These points is referred to as radar measurements.
+
 \section{Motion Model}\label{sec:motion-model}
 \subsection{Reference frame}
 A local Cartesian NED-frame, like \gls{utm} will be used throughout this thesis, with the assumption than all input sensors are transformed to this frame (see Section~\ref{subsec:frame_conversion}). This local projection from a geodetic coordinate system to a Cartesian coordinate system is acceptable as long as the the area the system is working on is within one grid. A global geodetic frame, like WGS84 would be preferable in situations where the system tracks object over world-scale lengths but would yield non-linear equations of motion.
@@ -395,7 +397,7 @@ A more advanced approach could be to utilize map data to estimate whether or not
 In this work, only range and score termination is implemented.
 
 \section{Track smoothing}
-After each iteration of the MHT algorithm a track list based on the selected hypotheses from Section~\ref{sec:optim_data_association} is passed forward to the operator and guidance system. Both human operators and guidance systems will try to predict the targets behaviour based on their historical track. To improve the visualisation for this purpose it is possible to smooth the tracks based on the real measurements in the track and masking the zero measurements in a Kalman smoother~\cite{Brown2012} with the same model as used in the predictions.
+After each iteration of the MHT algorithm a track list based on the selected hypotheses from Section~\ref{sec:optim_data_association} is passed forward to the operator and guidance system. Both human operators and guidance systems will try to predict the targets behaviour based on their historical track. To improve the visualisation for this purpose it is possible to smooth the tracks based on the real measurements in the track and masking the zero measurements in a Kalman smoother~\cite{Brown2012} with the same model as used in the predictions. As illustrated in Figure~\ref{fig:track_smoothing}, this will lead to a smother and in most cases a more accurate representation of the true track since it avoids the straight lines caused by dead reckoning. This smoothing will however not affect the tracking performance since it is done after miss detections are corrected and only on the track list sent out of the tracking module.
 \begin{figure}
 \centering
 \includegraphics[width = .9\textwidth]{Figures/track_smoothing.png}
