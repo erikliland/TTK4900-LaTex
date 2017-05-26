@@ -1,7 +1,7 @@
 %!TEX root = ../TTK4900-MHT.tex
 
 \chapter{MHT Module}\label{chapter:mht-module}
-To create a complete tracking \emph{system}, rather than a tracking \emph{algorithm}, it is often necessary  to complement the main algorithm with support modules. The system, or module if it is a part of a bigger system, presented here is an extension of the pre master project~\cite{Liland_2017}. The aim of this chapter is to provide a complete walkthrough of the the track oriented MHT system developed in this thesis. The motion model which is used throughout the entire tracking system when predicting and filtering target behaviour is presented first. Next follows an overview of the algorithm used to initiate new tracks into the MHT algorithm, followed by the entire MHT tracking algorithm with all its sub-routines.
+To create a complete tracking \emph{system}, rather than a tracking \emph{\gls{algorithm}}, it is often necessary  to complement the main algorithm with support modules. The system, or module if it is a part of a bigger system, presented here is an extension of the pre master project~\cite{Liland_2017}. The aim of this chapter is to provide a complete walkthrough of the the track oriented MHT system developed in this thesis. The motion model which is used throughout the entire tracking system when predicting and filtering target behaviour is presented first. Next follows an overview of the algorithm used to initiate new tracks into the MHT algorithm, followed by the entire MHT tracking algorithm with all its sub-routines.
 
 It will be assumed throughout this thesis that radar data is processed, as outlined in Section~\ref{sec:radar_preprocessing}, into a set of points. These points is referred to as radar measurements.
 
@@ -57,8 +57,8 @@ Since modelling the behaviour of any ship under unknown command is next to impos
 \M{\Phi} 	&= \text{state transition matrix} \\
 \M{H}		&= \text{state observation matrix} \\
 \M{Q}		&= \text{system covariance matrix} \\
-\V{w}		&= \text{process noise} \\
-\V{v}		&= \text{measurement noise} \\
+\V{w}		&= \text{\gls{system noise}} \\
+\V{v}		&= \text{\gls{measurement noise}} \\
 \V{z}		&= \text{measurement vector} \\
 k 			&= \text{time index} \\
 T  			&= \text{time step} \\
@@ -178,7 +178,7 @@ To compare new radar measurements with existing hypotheses, we should predict th
 \end{split}
 \end{equation*}
 
-\subsection{Gate, filter, score and create new nodes}
+\subsection{Gate}
 To limit the number of hypotheses the leaf node have to create, the measurements are gated based on the leaf node's predicted covariance and a set confidence value. The size of the gate (Figure~\ref{fig:radar_gating}) will reflect how insecure the prediction is, which is a function of how many detections and missed detections the leaf node and its parents have had. The gate is defined as \gls{nis} less that a threshold set by the \(\chi^2\)--distribution \gls{cdf} with as many degrees of freedom as the measurement, two degrees of freedom for a maritime radar, and a set confidence value. A set of confidence levels and belonging \(\chi^2\) \gls{cdf} values are listed in Table~\ref{tab:chi_square}. The measurement residual and \gls{nis} is calculated for each measurement, and the measurements that does not pass the test are discarded.
 \begin{figure}
 \centering
@@ -207,9 +207,9 @@ Confidence 	& 70\% 	& 80\% 	& 90\% 	& 95\% 	& 97.5\% 	& 99\% 	& 99.5\% \\
 ~\label{tab:chi_square}
 \end{table}
 
+\subsection{Filter, score and create new nodes}
 The scoring used in this tracking system is based on a dimensionless score function by Bar-Shalom~\cite{Bar-Shalom2007}. His paper discusses the issue of scoring measurement-to-track associations and comparing scores based on different numbers of measurement and measurement dimensions. He proposes a dimensionless \emph{likelihood ratio}, which is the \gls{pdf} of a measurement having originating from the track, to the \gls{pdf} of it not originating from the track.
 
-% \todo[inline]{Fill in the main steps in the derivation}
 Each \gls{track hypothesis} is scored according to (\ref{eq:radar_score_function}). Where the cumulative score being the sum through time since we are using the logarithm of the likelihood ration. For the fused hypotheses, their score is the cumulative score of both the measurements, giving them a better score reflecting that they are more likely hypotheses that pure radar or AIS hypotheses. 
 \begin{equation}\label{eq:radar_score_function}
 \mathrm{NLLR} = \frac{1}{2} NIS + \ln \frac{\lambda_{ex} |2 \pi S|^{1/2}} {P_D}		
@@ -283,14 +283,28 @@ For each leaf node all AIS measurements are gated with the gate matching their t
 \V{\hat{x}}_1 = \V{\bar{x}}_1 + \M{K} \V{\tilde{z}}
 \end{equation}
 
-This node is scored according to (\ref{eq:ais_score_function}), which is a modified version of the radar measurement score function (\ref{eq:radar_score_function}). The first difference being that the probability of detection is changed with the AIS probability of receive, since there is always a certain percentage of transmitted AIS messages that are not received, and the second difference being that the expected number of extraneous measurements is now a the expected number of AIS messages divided on the area of observation. 
+Since the score for radar measurements is a dimensionless likelihood ratio, we must use the same dimensionless likelihood on the \gls{ais} measurements. Depending on how we want the \gls{ais} to affect our tracking, three different scoring strategies are explored. The first approach is to view the \gls{ais} as a pure \emph{aiding}, where its only purpose is to improve the gating and uncertainty for the radar measurements. In this case, all \gls{ais} measurements are gated with a logarithmic score of zero, leading to neither improvement or worsening of the accumulative score of the track.
 
-\begin{equation}\label{eq:ais_score_function}
-\mathrm{NLLR} = \frac{1}{2} NIS + \ln \frac{\lambda_{AIS} |2 \pi S|^{1/2}} {P_r}			
+A second approach is to modify the score function for radar measurements. The maybe simplest way of doing this is to score according to (\ref{eq:ais_score_function1}), which is a modified version of the radar measurement score function (\ref{eq:radar_score_function}). The first difference being that the probability of detection is changed with the AIS probability of receive, which is approximated to unity. Since the \gls{ais} measurements does not contain Poisson distributed clutter and the only way to `remove' the clutter aspect of the scoring is to set \( \lambda_{ex} \) to 1, which is to say that there is an enormous amount of clutter and would consequently yield very bad scores for \gls{ais} measurements.
+
+\begin{equation}\label{eq:ais_score_function1}
+\mathrm{NLLR} = \frac{1}{2} NIS + \ln |2 \pi S|^{1/2} 
 \end{equation}
 
+Since the \gls{ais} measurements are inherently labelled, then for a single target all \gls{ais} measurements except maximum one (depending on whether it have \gls{ais} transceiver or not) can be  considered as clutter. If we then make the same assumptions as for radar measurements with respect to uniform spatial distribution and Poisson density distribution, we can estimate the expected number of \gls{ais} `clutter' measurements \( \lambda_{AIS} \) based on the amount of targets with \gls{ais} transmitters and the observation area (\ref{eq:ais_clutter_density}), where \(r_{radar}\) is the radar range. This estimate could be calculated for a single frame, or averaged over a sliding window to reflect the \gls{ais} message flow over time since \gls{ais} transmission is not synchronised with the radar period. The resulting score function would be (\ref{eq:ais_score_function2}).
+
+\begin{equation}\label{eq:ais_clutter_density}
+\lambda_{AIS} = \frac{n_{AIS}}{\pi r_{radar}^2}
+\end{equation}
+
+\begin{equation}\label{eq:ais_score_function2}
+\mathrm{NLLR} = \frac{1}{2} NIS + \ln \lambda_{AIS} |2 \pi S|^{1/2} 
+\end{equation}
+
+Of the three scoring methods explored, only the first and last is usable and mathematically sane. The second approach would yield scores so bad that the hypotheses containing an \gls{ais} measurement would never be selected, hence working against its purpose. Testing has shown that both the first and last method gives an improvement over pure radar tracking, and since the last method gives a little more improvement since it scores the \gls{ais} measurements with a reasonable values compared to the radar measurements, hence not giving the \gls{ais} measurements an enormous advantage or disadvantage. The third method is used in all the simulations in Chapter~\ref{chapter:results}.
+
 \subsection{Predict to radar time}
-All gated and filtered states from Section~\ref{sec:ais_gate_filter_score} is then predicted forward to  the time of the radar measurements. This time delta will differ based on the time of the AIS measurement. Radar measurements are then gated for each predicted state and covariance, whereon a fused hypothesis are created for each radar measurement inside the gate. If there is no radar measurements inside the gate, a pure AIS hypothesis are created. 
+All gated and filtered states from Section~\ref{sec:ais_gate_filter_score} is then predicted forward to  the time of the radar measurements. This time delta will differ based on the time of the AIS measurement. Radar measurements are then gated for each predicted state and covariance, whereon a fused hypothesis are created for each radar measurement inside the gate. If there is no radar measurements inside the \gls{gate}, a pure \gls{ais} hypothesis are created. 
 
 \subsubsection{Fused hypotheses}
 The predicted state and covariance is then filtered with the gated radar measurement according to (\ref{eq:kalman_measurement_update}). The radar measurement is scored according to (\ref{eq:radar_score_function}), and the hypothesis score is the sum of the AIS and radar score.
@@ -299,14 +313,14 @@ The predicted state and covariance is then filtered with the gated radar measure
 If no radar measurements are present in the gate, pure AIS hypotheses are created. This can be the situation when a target is broadcasting an AIS message, but is either in radar shadow or is not detected by the radar for any reason. These hypotheses are not created when one or more radar measurements are available, based on the assumption that if a radar measurement is present, the difference between a fused hypothesis and a pure AIS hypothesis is quite small since the AIS measurement covariance typically will be much smaller than the radar measurement covariance, leading to a fused state very close to the AIS measurement. The pure AIS hypothesis will use its predicted state, covariance and score, somewhat similar to radar zero hypotheses.
 
 \section{Clustering}
-The problem of finding the globally optimal set of track hypotheses increases exponentially with the number of hypotheses in the problem. To reduce the size of the problem, it is desirable to split it into smaller independent problems. Both because it enables parallel computation and it reduces the total cost of solving the problem. Track trees that have common measurements must be solved together, since they can have mutual exclusive leaf nodes. The clustering can be done efficiently through \gls{bfs} or \gls{dfs} on a graph made from the hypothesis tree.
+The problem of finding the globally optimal set of track hypotheses increases exponentially with the number of hypotheses in the problem. To reduce the size of the problem, it is desirable to split it into smaller independent problems. Both because it enables parallel computation and it reduces the total cost of solving the problem. Track trees that have common measurements must be solved together, since they can have mutual exclusive leaf nodes. The clustering can be done efficiently through \gls{bfs} or \gls{dfs} on a graph made from the \gls{track hypothesis tree}.
 
-By constructing a 0--1 adjacency matrix describing the connection between all the nodes in the track forest, the clustering problem is equivalent to the \emph{connected components} problem in graph theory~\cite{Chen2015}.
+By constructing a 0--1 adjacency matrix describing the connection between all the nodes in the \gls{track forest}, the clustering problem is equivalent to the \emph{connected components} problem in graph theory~\cite{Chen2015}.
 
 \section{Optimal data association}\label{sec:optim_data_association}
 The aim of this section is to elaborate the use of ILP to solve the data association problem in MHT that arises when there are multiple, possibly mutual exclusive, possibilities of measurement arrangements within the existing set of tracks.
 
-When the targets are divided into independent clusters, each of them can be treated as a global problem where we want to minimize the cost or maximize the score of the selected \glspl{track hypothesis} (leaf nodes). The selected \glspl{track hypothesis} must also fulfil the constraints, that each measurement can only be a part of one track, and that minimum and maximum one track hypothesis can be selected from each target. Since only binary values, selected or not selected, is possible for selection of hypotheses, the problem becomes an \gls{ilp}. In the case where a cluster is only containing one target tree, the best hypothesis can be selected by running a search among the leaf nodes after the highest score, since none of the leaf nodes are excluding other leaf nodes in other target trees. This will often be the case for targets that are largely spaced out, and their gates are not and have not overlapped in a while. For any other case, where there are two or more targets in a cluster, the procedure in Section~\ref{subsec:integer_linear_programming} must be carried out. 
+When the targets are divided into independent clusters, each of them can be treated as a global problem where we want to minimize the cost or maximize the score of the selected \glspl{track hypothesis} (leaf nodes). The selected \glspl{track hypothesis} must also fulfil the constraints, that each measurement can only be a part of one track, and that minimum and maximum one track hypothesis can be selected from each target. Since only binary values, selected or not selected, is possible for selection of hypotheses, the problem becomes an \gls{ilp}. In the case where a cluster is only containing one target tree, the best hypothesis can be selected by running a search among the leaf nodes after the highest score, since none of the leaf nodes are excluding other leaf nodes in other target trees. This will often be the case for targets that are largely spaced out, and their gates are not and have not overlapped in a while. For any other case, where there are two or more targets in a cluster, the procedure in Section~\ref{subsec:integer_linear_programming} must be carried out.
 
 \subsection{Integer Linear programming}\label{subsec:integer_linear_programming}
 The essence of any optimization problem is a cost function and a set of constraints. In our problem, we want to select the combination of hypotheses (leaf nodes) that gives the highest score / lowest cost, while not selecting any measurement more than one time and ensure that we select minimum and maximum one hypothesis from each target. 
@@ -397,7 +411,7 @@ A more advanced approach could be to utilize map data to estimate whether or not
 In this work, only range and score termination is implemented.
 
 \section{Track smoothing}
-After each iteration of the MHT algorithm a track list based on the selected hypotheses from Section~\ref{sec:optim_data_association} is passed forward to the operator and guidance system. Both human operators and guidance systems will try to predict the targets behaviour based on their historical track. To improve the visualisation for this purpose it is possible to smooth the tracks based on the real measurements in the track and masking the zero measurements in a Kalman smoother~\cite{Brown2012} with the same model as used in the predictions. As illustrated in Figure~\ref{fig:track_smoothing}, this will lead to a smother and in most cases a more accurate representation of the true track since it avoids the straight lines caused by dead reckoning. This smoothing will however not affect the tracking performance since it is done after miss detections are corrected and only on the track list sent out of the tracking module.
+After each iteration of the MHT algorithm a track list based on the selected hypotheses from Section~\ref{sec:optim_data_association} is passed forward to the operator and guidance system. Both human operators and guidance systems will try to predict the targets behaviour based on their historical track. To improve the visualisation for this purpose it is possible to smooth the tracks based on the real measurements in the track and masking the zero measurements in a Kalman smoother~\cite{Brown2012} with the same model as used in the predictions. As illustrated in Figure~\ref{fig:track_smoothing}, this will lead to a smother and in most cases a more accurate representation of the true track since it avoids the straight lines caused by dead reckoning. This smoothing will however not affect the \gls{tracking} performance since it is done after miss detections are corrected and only on the track list sent out of the tracking module.
 \begin{figure}
 \centering
 \includegraphics[width = .9\textwidth]{Figures/track_smoothing.png}

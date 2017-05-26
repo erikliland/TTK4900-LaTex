@@ -72,7 +72,7 @@ All \gls{ais} messages are stamped with the \gls{utc} of transmission, and `freq
 \begin{figure}[H]
 \centering
 \includegraphics[width = .9\textwidth]{Figures/out_of_order_ais.png}
-\caption{Unfiltered and filtered AIS arrival time~\cite{Wilthil}}\label{fig:out_of_order_ais}
+\caption{Unfiltered and filtered AIS arrival time}\label{fig:out_of_order_ais}
 \end{figure}
 One of the simplest ways of remedying this issue is to discard all messages with older timestamps that the current newest for each \gls{mmsi}. This will lead to a loss of data, which will lead to a slower AIS update period for the tracking module.
 
@@ -83,4 +83,3 @@ To remedy this issue, a simple test logic can be incorporated to check for obvio
 
 \subsection{Synchronization}
 Since AIS messages arrive asynchronously and the tracking module is only accepting AIS updates along with radar updates, we must synchronize the incoming AIS messages. In this work, all \gls{ais} measurements are buffered from when they are received until the next radar scan.
-%and predicted according to the tracking modules motion model forward in time to match the radar scan time. This is a design choice, which in some sense synchronize the AIS to the radar. Since the radar period is much smaller than (or in the best case for the AIS, equal to) the AIS transmit period, this will seldom lead to unused AIS measurements. On the other hand, since the radar period is relative short, the amount of time any AIS position will be predicted forward is typically small enough to not cause uncertainty larger than manageable for the algorithm.

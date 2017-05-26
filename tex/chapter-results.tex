@@ -1,28 +1,29 @@
 %!TEX root = ../TTK4900-MHT.tex
 \chapter{Results}\label{chapter:results}
-\section{Testing scheme}
-The performance evaluation of the MHT tracking system is tedious in that it is necessary to test very many different situations to get a good understanding of how the system is performing. The two largest factors contributing to the difficulty is the random nature of the clutter and lost detections. It is also desirable to evaluate the initialization and tracking performance under both varying environmental (external) conditions and tuning (internal) setting. We want good tracking of targets with low probability of detections in cluttered environment, and secondly it must be able to do this within the time frame of the radar rotation period. The initialization module must be able to detect targets with probability of detection lower than unity without initializing too many false tracks into the MHT algorithm. The testing is separated into two parts; initialization and tracking.
+The performance evaluation of any tracking system difficult since the degrees of freedom are very large and there are no single of few obvious performance metrics. There are however two distinct found in the literature, pure Monte Carlo testing and situation / scenario testing. The first being that parameters like number of tracks, start position, velocity, manoeuvring, missed detections and clutter all are randomly selected and repeated many times. From a pure numerical point of view this approach seems reasonable, but it does not necessary create realistic tracking scenarios for observation dimensions higher that one. The second approach to testing is to create one or more scenarios which then is simulated with random variables like detection and noise. This approach is vulnerable to the created scenarios, since the design can heavily impact the measured performance. This method allows also for construction of very specific situations where it is desirable to test multiple tracking system on the same custom created situation for comparison purposes.
 
+\section{Testing scheme}
+The performance evaluation of any MHT system is tedious in that it is necessary to test very many different situations to get a good understanding of how the system is performing. The two largest factors contributing to the difficulty is the random nature of the clutter and lost detections. It is also desirable to evaluate the initialization and tracking performance under both varying environmental (external) conditions and tuning (internal) setting. We want good tracking of targets with low probability of detection in cluttered environment, and secondly it must be able to do this within the time frame of the radar rotation period. The initialization module must be able to detect targets with probability of detection lower than unity without initializing too many false tracks into the MHT algorithm. The testing is separated into two parts; initialization and tracking.
 
 The performance metrics for the initialization module is how long time it takes to initialize the correct tracks, which is tested under a range of internal and external conditions, see (\ref{eq:init_test_table}). All combinations of these parameters were simulated on all scenarios (Table~\ref{tab:ais_scenarios}), which are the same routes but with different \gls{ais} configurations. 
  From these simulations, the time to initiate true targets and amount of erroneous targets are calculated. A track is categorized as correct initialized if the state difference between the true track and the initial track is less that a threshold. All initial tracks that does not correspond to a true track is categorized as erroneous. To analyse the impact of the erroneous tracks, the lifespan of falsely initiated tracks is plotted to see whether they die out at the same rate as they are initiated, or if they accumulate.
 \begin{equation}\label{eq:init_test_table}
 \begin{split}
-\V{P_D} &= \begin{bmatrix} .99 & 0.8 & 0.6 \end{bmatrix} \\
+\V{P_D} &= \begin{bmatrix} .9 & 0.8 & 0.6 \end{bmatrix} \\
 (m/n) &= \begin{bmatrix} 	(1/1) & (1/2) & (1/3) & (1/4) \\
 							(2/2) & (2/3) & (2/4) & (2/5) \\
 							(3/3) & (3/4) & (3/5) & (3/6)
 		   \end{bmatrix} \\
-\V{\lambda_\phi} &= \begin{bmatrix} 0 & 2\cdot10^{-6} & 4\cdot10^{-6} & 8\cdot10^{-6}\end{bmatrix}
+\V{\lambda_\phi} &= \begin{bmatrix} 0 & 5\cdot10^{-6} & 1\cdot10^{-5}\end{bmatrix}
 \end{split}
 \end{equation}
 
 When testing the tracking performance, it is desirable to remove the variable of initialization to better see difference in \emph{tacking} rather than \emph{initialization}. All simulations testing tracking performance are carried out with all targets correctly initialized at initial time, and with the initiator set to \( (2/4) \) such that the unused measurements from the tracking algorithm would be treated as normal. This would also give lost targets a change to get re-initialized, which is an important property for any safety critical system.
 \begin{equation}\label{eq:tracking_test_table}
 \begin{split}
-\V{P_D} &= \begin{bmatrix} .99 & 0.8 & 0.6 \end{bmatrix} \\
+\V{P_D} &= \begin{bmatrix} .9 & 0.8 & 0.6 \end{bmatrix} \\
 \V{N} &= \begin{bmatrix} 1 & 3 & 6 & 9 \end{bmatrix} \\
-\V{\lambda_\phi} &= \begin{bmatrix} 0 & 2\cdot10^{-6} & 4\cdot10^{-6} & 8\cdot10^{-6} \end{bmatrix}
+\V{\lambda_\phi} &= \begin{bmatrix} 0 & 5\cdot10^{-6} & 1\cdot10^{-5} \end{bmatrix}
 \end{split}
 \end{equation}
 Since the targets are initialized perfectly in every situation, we are interested in how good our system is able to \emph{keep} on the tracks. We measure this by means of the Euclidean distance between the estimated and true track (\ref{eq:euclidian_distance_vector}).
