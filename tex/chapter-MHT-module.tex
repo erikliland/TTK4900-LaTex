@@ -1,7 +1,7 @@
 %!TEX root = ../TTK4900-MHT.tex
 
 \chapter{MHT Module}\label{chapter:mht-module}
-To create a complete tracking \emph{system}, rather than a tracking \emph{\gls{algorithm}}, it is often necessary  to complement the main algorithm with support modules. The system, or module if it is a part of a bigger system, presented here is an extension of the pre master project~\cite{Liland_2017}. The aim of this chapter is to provide a complete walkthrough of the the track oriented MHT system developed in this thesis. The motion model which is used throughout the entire tracking system when predicting and filtering target behaviour is presented first. Next follows an overview of the algorithm used to initiate new tracks into the MHT algorithm, followed by the entire MHT tracking algorithm with all its sub-routines.
+To create a complete tracking \emph{system}, rather than a tracking \emph{\gls{algorithm}}, it is often necessary to complement the main algorithm with support modules. The system, or module if it is a part of a bigger system, presented here is an extension of the pre master project~\cite{Liland_2017}. The aim of this chapter is to provide a complete walkthrough of the the track oriented MHT system developed in this thesis. The motion model which is used throughout the entire tracking system when predicting and filtering target behaviour is presented first. Next follows an overview of the algorithm used to initiate new tracks into the MHT algorithm, followed by the entire MHT tracking algorithm with all its sub-routines.
 
 It will be assumed throughout this thesis that radar data is processed, as outlined in Section~\ref{sec:radar_preprocessing}, into a set of points. These points is referred to as radar measurements.
 
@@ -10,7 +10,7 @@ It will be assumed throughout this thesis that radar data is processed, as outli
 A local Cartesian NED-frame, like \gls{utm} will be used throughout this thesis, with the assumption than all input sensors are transformed to this frame (see Section~\ref{subsec:frame_conversion}). This local projection from a geodetic coordinate system to a Cartesian coordinate system is acceptable as long as the the area the system is working on is within one grid. A global geodetic frame, like WGS84 would be preferable in situations where the system tracks object over world-scale lengths but would yield non-linear equations of motion.
 
 \subsection{Constant velocity model}
-The state (\ref{eq:state_vector}) of the targets are modelled with in four dimensions in a Cartesian frame where the positive \(x\)-axis is pointing east and the positive \(y\)-axis is pointing north. The two latest states are the velocities in their respective direction.
+A target state (\ref{eq:state_vector}) is modelled with position and velocity in a 2D Cartesian frame where the positive \(x\)-axis is pointing east and the positive \(y\)-axis is pointing north. The two latest states are the velocities in their respective direction.
 \begin{equation}
 \V{x} = \begin{bmatrix}
 x & y & \dot{x} & \dot{y}
@@ -18,7 +18,8 @@ x & y & \dot{x} & \dot{y}
 \label{eq:state_vector}
 \end{equation}
 
-Since modelling the behaviour of any ship under unknown command is next to impossible, a common assumption in tracking theory is that every target will continue on as usual, more precisely that their velocity is constant. Although simple, this model captures the essence of most vessels at sea, and when looking at maritime training~\cite{Allen2005} and regulation~\cite{IMO1972}, they both dictates that vessels should hold steady course and change course in clear decisive turns. This model is also very common in tracking applications and is used in~\cite{Reid1979,Coraluppi2000,Brekke2012,Wilthil,Vo2015,Chen2003,Habtemariam2015} among others. To give room in our model for manoeuvring, the process noise covariance is set according to the assumed manoeuvring capabilities of the vessels. This could be set as a fixed value for all targets, as done in this work, or estimated based on the history of the track or AIS information. This behaviour can be modelled as a linear time invariant system  with time evolution (\ref{eq:motion_model}), measurement model (\ref{eq:measurement_model}), transition and observation matrices (\ref{eq:model_matrices}) and system and measurement noise matrices (\ref{eq:noise_matrices}).
+Since modelling the behaviour of any ship under unknown command is next to impossible, a common assumption in tracking theory is that every target will continue on as usual, more precisely that their velocity is constant. Although simple, this model captures the essence of most vessels at sea, and it should be noted that both maritime training~\cite{Allen2005} and regulation~\cite{IMO1972} dictates that vessels should hold steady course and change course in clear decisive turns. This model is also very common in tracking applications and is used in~\cite{Reid1979,Coraluppi2000,Brekke2012,Wilthil,Vo2015,Chen2003,Habtemariam2015} among others. To give room in our model for manoeuvring, process noise is introduced with covariance set according to the assumed manoeuvring capabilities of the vessels. This could be set as a fixed value for all targets, as done in this work, or estimated based on the history of the track or AIS information. This behaviour can be modelled as a linear time invariant system with time evolution (\ref{eq:motion_model}), measurement model (\ref{eq:measurement_model}), transition and observation matrices (\ref{eq:model_matrices}), and system and measurement noise matrices (\ref{eq:noise_matrices}).
+
 \begin{equation}\label{eq:motion_model}
 \V{x}_{k+1} = \M{\Phi} \V{x}_k + \V{w}_k \qquad \V{w} \sim \mathcal{N}(0;\M{Q})
 \end{equation}
@@ -66,20 +67,24 @@ T  			&= \text{time step} \\
 \end{equation*}
 
 \section{Track Initiation}
-In comparison with \gls{homht} who treats every measurement as a potential new track since its hypotheses are essentially different ways of organizing its measurements into tracks, which are repeated for every iteration, \gls{tomht} does not have any built-in initialization of tracks since it only maintains an already existing track with track splitting and measurement-to-track association for every iteration. To remedy this lack, we need an algorithm that can find consistent and predictable patterns in an assumed uniformly distributed measurement space of clutter. 
+In comparison with \gls{homht}, which treats every measurement as a potential new track 
+%since its hypotheses are essentially different ways of organizing its measurements into tracks, which are repeated for every iteration,
+ \gls{tomht} does not have any built-in initialization of tracks since it only maintains already existing tracks with track splitting and measurement-to-track association for every scan. To remedy this lack, we need an algorithm that can find consistent and predictable patterns in an assumed uniformly distributed measurement space of clutter. 
 
-In this work, new tracks are initiated with 2/2 \& m/n logic~\cite{Vo2015} on the unused measurements after each MHT iteration. As the name of the method indicates, this is a two step verification, where the first act as a rough filter and the second as a fine filter. As one of the main assumptions in most tracking systems, the measured radar clutter is assumed uniformly distributed in the measurement area. This assumption is quite rough in the radial measurement space, and even worse approximation in Cartesian measurement space, as illustrated in \Cref{fig:clutter_radial,fig:clutter_cartesian}.  Although far from perfect, tests shows that we still get satisfactory performance from the 2/2\&m/n method.
-\begin{figure}[H]
-\centering
-\begin{minipage}{0.45\textwidth}
-\includegraphics[width=\textwidth]{Figures/clutterRadial.png}
-\caption{Uniform radial clutter}\label{fig:clutter_radial}
-\end{minipage}\hfill
-\begin{minipage}{0.45\textwidth}
-\includegraphics[width=\textwidth]{Figures/clutterCartesian.png}
-\caption{Uniform Cartesian clutter}\label{fig:clutter_cartesian}
-\end{minipage}
-\end{figure}
+In this work, new tracks are initiated with 2/2 \& m/n logic~\cite{Vo2015} on the unused measurements after each MHT iteration. As the name of the method indicates, this is a two step verification, where the first act as a rough filter and the second as a fine filter. As a common in most tracking systems, the radar clutter is assumed uniformly distributed in the measurement area. 
+%This assumption is quite rough in the radial measurement space, and even worse approximation in Cartesian measurement space, as illustrated in \Cref{fig:clutter_radial,fig:clutter_cartesian}.  Although far from perfect, tests shows that we still get satisfactory performance from the 2/2\&m/n method.
+% \begin{figure}[H]
+% \centering
+% \begin{minipage}{0.45\textwidth}
+% \includegraphics[width=\textwidth]{Figures/clutterRadial.png}
+% \caption{Uniform radial clutter}\label{fig:clutter_radial}
+% \end{minipage}\hfill
+% \begin{minipage}{0.45\textwidth}
+% \includegraphics[width=\textwidth]{Figures/clutterCartesian.png}
+% \caption{Uniform Cartesian clutter}\label{fig:clutter_cartesian}
+% \end{minipage}
+% \end{figure}
+
 The flow of the method is illustrated in Figure~\ref{fig:init_flowchart}, and for better clarity, the algorithm is explained from the last step to the first step, since this is the sequence a newly started initiation algorithm will perform its operations.
 \begin{figure}[H]
 \centering
@@ -138,20 +143,21 @@ For preliminary tracks that have enough passed measurements a new initial target
  \includegraphics{Figures/Track-tree.pdf}
  \caption{Hypothesis tree}\label{fig:hyp_tree}
 \end{figure}
-The aim of this section is to outline the major steps in the MHT module and the flow of data and decisions. Figure~\ref{fig:algorithm_flow} shows the main steps that the module perform at each iteration / radar scan. The \gls{mht} algorithm is working on a set of \glspl{dag} or  tree structures, often called a forest. The forest contains as many trees as targets the algorithm is tracking. Each tree consist of a root node and a set of child nodes, where each row represent a scan or discrete time. The leaf nodes are referred to as track hypotheses since leaf nodes represents itself and its parents.
+The aim of this section is to outline the major steps in the MHT module and the flow of data and decisions. Figure~\ref{fig:algorithm_flow} shows the main steps that the module perform at each iteration / radar scan. The \gls{mht} algorithm is working on a set of \glspl{dag} or tree structures, often called a forest. The forest contains as many trees as targets the algorithm is tracking. Each tree consist of a root node and a set of child nodes, where each row represent a scan or discrete time. The leaf nodes are referred to as track hypotheses since leaf nodes represents itself and its parents.
 
  When new 	AIS and radar measurements are received, all leaf nodes are predicted forward to the time of the radar measurements. The radar measurements are then gated for each leaf node, and new hypotheses are generated for measurements within the gate. The AIS measurements are gated at their time, and then predicted to the time of the radar measurements. The radar measurements are then gated gated based on each of the filtered AIS measurements, where the gated radar measurements give rise for fused hypotheses. Each new hypothesis is then given a score, which is the cumulative score of the parent node score and the new node's score. The target trees are then clustered according to which trees that shares measurements, whereon clusters with only one tree has the option of removing / merging similar hypotheses to reduce the size of the tree. For each cluster, the cluster-wise globally best association combination is selected using \gls{ilp}. Then, for each selected hypothesis the parent N steps above becomes the new root of that tree, and the unused children to the previous root node are removed. Next, targets who's best hypothesis have a score below the threshold is terminated, followed by the initialization of new targets from the initiator module. 
 
- The algorithm described in the three following  sections are repeated for every leaf node in the forest. To avoid an extensive use of node- and measurement indexing the procedure is explained for one leaf node, with this node referred to as 0--node, and is repeated for all leaf nodes in the forest. 
-\begin{figure}
+ The algorithm described in the three following sections are repeated for every leaf node in the forest. To avoid an extensive use of node- and measurement indexing the procedure is explained for one leaf node, with this node referred to as 0--node, and is repeated for all leaf nodes in the forest. This zero is only a symbol for indexing and referencing the leaf node relative to predicted and filtered states, and is not the same as a zero-hypothesis representing a missed detection in Section~\ref{subsubsec:radar_zero_hypothesis}. 
+\begin{figure}[H]
 \centering
 \includegraphics[width = \textwidth]{algorithm_flowchart.pdf}
 \caption{Algorithm flowchart}\label{fig:algorithm_flow}
 \end{figure}
 
+To illustrate how this \gls{mht} system works we can look at an example of a target when it is turning. Figure~\ref{fig:hypotheses_when_turning} shows a single target which started in the lower left side doing a hard port turn followed by a strait course. The purple dots is the true track, the black dot is the stating position, the solid line is the selected/best hypothesis and the dotted lines are all the other hypotheses. As the target is turning, the zero hypotheses will continue in a straight line to allow for the possibility that there is a missed detection at that time. Most of the zero hypotheses are also splitting after their first and second scan upon creation, which can be seen as sharp angles between dotted lines moving outwards in the turn and dotted lines representing hypotheses which have re-connected with the true target.
 \begin{figure}[H]
 \centering
-\includegraphics[height = .4\textheight]{Figures/Hypotheses_when_turning.PNG}
+\includegraphics[height = .5\textheight]{Figures/Hypotheses_when_turning.PNG}
 \caption{Hypotheses when turning}\label{fig:hypotheses_when_turning}
 \end{figure}
 
@@ -208,9 +214,9 @@ Confidence 	& 70\% 	& 80\% 	& 90\% 	& 95\% 	& 97.5\% 	& 99\% 	& 99.5\% \\
 \end{table}
 
 \subsection{Filter, score and create new nodes}
-The scoring used in this tracking system is based on a dimensionless score function by Bar-Shalom~\cite{Bar-Shalom2007}. His paper discusses the issue of scoring measurement-to-track associations and comparing scores based on different numbers of measurement and measurement dimensions. He proposes a dimensionless \emph{likelihood ratio}, which is the \gls{pdf} of a measurement having originating from the track, to the \gls{pdf} of it not originating from the track.
+The scoring used in this tracking system is based on a dimensionless score function by Bar-Shalom~\cite{Bar-Shalom2007}. His paper discusses the issue of scoring measurement-to-track associations and comparing scores based on different numbers of measurement and measurement dimensions. He proposes a dimensionless \emph{likelihood ratio}, which is the \gls{pdf} of a measurement having originating from the track, divided by the \gls{pdf} of it not originating from the track.
 
-Each \gls{track hypothesis} is scored according to (\ref{eq:radar_score_function}). Where the cumulative score being the sum through time since we are using the logarithm of the likelihood ration. For the fused hypotheses, their score is the cumulative score of both the measurements, giving them a better score reflecting that they are more likely hypotheses that pure radar or AIS hypotheses. 
+Each pure radar \gls{track hypothesis} is scored according to (\ref{eq:radar_score_function}).  The cumulative score assigned to a hypothesis is the sum of its parent and its own score.
 \begin{equation}\label{eq:radar_score_function}
 \mathrm{NLLR} = \frac{1}{2} NIS + \ln \frac{\lambda_{ex} |2 \pi S|^{1/2}} {P_D}		
 \end{equation}
@@ -218,16 +224,16 @@ Each \gls{track hypothesis} is scored according to (\ref{eq:radar_score_function
 \mathrm{cNLLR}_k^j \triangleq \sum_{l=0}^k NLLR_{i,j}(l)
 \end{equation}
 
-\subsubsection{Zero hypothesis}
+\subsubsection{Zero hypothesis}\label{subsubsec:radar_zero_hypothesis}
 To account for the possibility that the target is not present in this scan, a \emph{zero} hypothesis, or \emph{dummy} hypothesis as it is sometimes called, is generated with the predicted state and covariance \(\V{\bar{x}}_1, \M{\bar{P}}_1\). This node is numbered 0 in Figure~\ref{fig:hyp_tree} and~\ref{fig:hyp_forest}.
 
 \subsubsection{Pure radar hypotheses}
-For every radar measurement inside the gate in (\ref{eq:gate}), a new track hypothesis is generated with filtered state and covariance according to the regular Kalman `measurement update' equation (\ref{eq:kalman_measurement_update}). These hypotheses are numbered incrementally from 1 and upwards.
+For every radar measurement inside the gate in (\ref{eq:gate}), a new track hypothesis is generated with filtered state and covariance according to the regular Kalman `measurement update' equation (\ref{eq:kalman_measurement_update}).
 \begin{equation}\label{eq:kalman_measurement_update}
 \begin{split}
-\M{K}_1 	&= \M{\bar{P}}_1 \M{H}^T \M{S}_1^{-1} \\
-\V{\hat{x}}_1 &= \V{\bar{x}}_1 + \M{K} \V{\tilde{z}} \\
-\M{\hat{P}}_1 &= \left( \M{I} - \M{K} \M{H} \right) \M{\bar{P}}_1 \\
+\M{K} 	&= \M{\bar{P}} \M{H}^T \M{S}^{-1} \\
+\V{\hat{x}} &= \V{\bar{x}} + \M{K} \V{\tilde{z}} \\
+\M{\hat{P}} &= \left(\M{I} - \M{K} \M{H} \right) \M{\bar{P}} \\
 \end{split}
 \end{equation}
 \begin{equation*}
@@ -241,17 +247,45 @@ For every radar measurement inside the gate in (\ref{eq:gate}), a new track hypo
 \section{Process AIS measurements}\label{sec:process_ais_measurements}
 As elaborated in Section~\ref{sec:ais_preprocessing} all AIS measurements are preprocessed to remove out-of-order messages and ID-swap errors. And for each radar scan, only the latest AIS update from each target (\gls{mmsi} number) are passed through to the MHT tracking loop.
 
+The integration of AIS measurements into the MHT framework is not obvious and multiple approaches is possible. Since the AIS and radar measurement originates from different times, only sequential update methods~\cite{Bar-Shalom1995} are considered in this work. The first step in any approach would be to decide which AIS measurements the leaf node shall consider. The radar measurements usually arrives at fixed intervals and is normally not synchronized to an external clock. \gls{ais} on the other hand is transmitted at asynchronous intervals and the messages are time stamped with \gls{utc} time in whole seconds. These properties leads to a finite and in most cases relatively small number of possible \gls{ais} time stamps in between each radar scan. The long runtime for each iteration to a \gls{mht} algorithm favours synchronous processing of both \gls{ais} and \gls{radar} measurements at the arrival of each radar scan. This leads to two alternatives to gating; compare and gate AIS measurements at the AIS message times or predict the AIS measurements forward to the radar measurements time and gate at the same time as radar measurements.
+
+\begin{algorithm}[H]
+\caption{AIS gating at AIS time}\label{alg:ais_gating_at_ais_time}
+\begin{algorithmic}[1]
+\Procedure{Node::gateAisMeasurements}{AISmeasurements}
+\State{} \(M0 \gets AISmeasurements\)
+\State{}  aisTimes \( \gets \) Set(AISmeasurements.times) 
+\For{time \(\ in \) aisTimes}
+\State{} \(T \gets time - node.time \)
+\State{} \( \V{\bar{x}} = \M{\Phi}(T) \V{x_0} \)
+\State{} \( \V{\bar{P}} = \M{\Phi}(T) \M{P_0} \M{\Phi}(T) + \M{Q}(T) \)
+\State{} \( M1 \gets M0\) where measurement.time  == time
+\State{} \( accuracySet \gets Set(M1.accuracy)\) \Comment{Accuracy can only be high or low}
+\For{accuracy \(\ in \) accuracySet}
+\State{} \(M2 \gets M1\) where measurement.accuracy == accuracy
+\State{} \( \M{S} \gets \M{H}\M{\bar{P}}\M{H}^T + \M{R}_{accuracy} \)
+\For{measurement \(in M2\)}
+\State{} \( \V{z} \gets measurement.value \)
+\State{} \( \V{\tilde{z}} \gets \V{z} - \M{H} \V{\bar{x}} \)
+\State{} NIS \( \gets \V{\tilde{z}}^T \M{S}^{-1} \V{\tilde{z}} \)
+\State{} insideGate \( \gets NIS \leq \eta^2 \)
+\EndFor{}
+\EndFor{}
+\EndFor{}
+\EndProcedure{}
+\end{algorithmic}
+\end{algorithm}
+Algorithm~\ref{alg:ais_gating_at_ais_time} outlines the main steps when gating at \gls{ais} times. The first step would be to find all the different time stamps in the \gls{ais} \gls{measurement list}. Since most maritime radars operate between 24 and 48 \gls{rpm} and the AIS time in seconds is always integer, a maximum of 2 different AIS times will exist in between two radar scans. Then for each time in the time set, a predicted state and covariance is calculated and the measurements that are stamped with this time is picked out of the \gls{ais}measurement list. Since \gls{ais} messages transmit accuracy as either high or low, two different measurement covariance might be needed. The covariance residual is calculated for each accuracy among the measurements, whereon a the measurements are gated
+
+%  For all AIS measurement inside their gates, a filtered state and covariance is calculated and predicted forward to the radar measurements time. This prediction is then used to gate radar measurements and create a fused node for each radar measurement inside this gate.
+
 \begin{figure}
 \centering
 \includegraphics[width = .8\textwidth]{Figures/AIS_gating.pdf}
 \caption{AIS gating}\label{fig:ais_gating}
 \end{figure}
 
-The integration of AIS measurements into the MHT framework is not obvious and multiple approaches is possible. Since the AIS and radar measurement originates from different times, the fusion process is done as a sequential update~\cite{Bar-Shalom1995}. The first step in any approach would be to decide which AIS measurements the leaf node shall consider. This leads to two alternatives; compare and gate at the AIS message time or the radar measurements time. 
-
-If gating at AIS time, the node would have to be predicted to the time of the all the different AIS measurements received since last scan. Since most maritime radars operate between 24 and 48 \gls{rpm} and the AIS time is always integer, a maximum of 2 different AIS times will exist in between two radar scans, making this approach feasible. Since each AIS measurement can have different accuracy and measurement covariance, the gating would have to be carried out one AIS measurement at a time with its own covariance residual. For all AIS measurement inside their gates, a filtered state and covariance is calculated and predicted forward to the radar measurements time. This prediction is then used to gate radar measurements and create a fused node for each radar measurement inside this gate.
-
-Another approach would be to use the predicted AIS measurements at the radar time and gate them based on the predicted origin node state \(\V{\hat{x}}_1\) and AIS measurement covariance. This approach could lead to unwanted AIS measurements inside the gate since the AIS measurements from other vessels can be predicted into the gate, thus leading to a more challenging association. This is examplified in Figure~\ref{fig:ais_gating} A2, where AIS measurement 2 is would be inside the radar measurement gate but not in the AIS time gates.
+If gating at radar time and gate them based on the predicted origin node state \(\V{\hat{x}}_1\) and AIS measurement covariance. This approach could lead to unwanted AIS measurements inside the gate since the AIS measurements from other vessels can be predicted into the gate, thus leading to a more challenging association. This is exemplified in Figure~\ref{fig:ais_gating} A2, where AIS measurement 2 would be inside the radar measurement gate but not in the AIS time gates.
 
 In this work, the first approach is used for its assumed better performance and utilization of original data rather than predicted data. 
 
@@ -291,7 +325,7 @@ A second approach is to modify the score function for radar measurements. The ma
 \mathrm{NLLR} = \frac{1}{2} NIS + \ln |2 \pi S|^{1/2} 
 \end{equation}
 
-Since the \gls{ais} measurements are inherently labelled, then for a single target all \gls{ais} measurements except maximum one (depending on whether it have \gls{ais} transceiver or not) can be  considered as clutter. If we then make the same assumptions as for radar measurements with respect to uniform spatial distribution and Poisson density distribution, we can estimate the expected number of \gls{ais} `clutter' measurements \( \lambda_{AIS} \) based on the amount of targets with \gls{ais} transmitters and the observation area (\ref{eq:ais_clutter_density}), where \(r_{radar}\) is the radar range. This estimate could be calculated for a single frame, or averaged over a sliding window to reflect the \gls{ais} message flow over time since \gls{ais} transmission is not synchronised with the radar period. The resulting score function would be (\ref{eq:ais_score_function2}).
+Since the \gls{ais} measurements are inherently labelled, then for a single target all \gls{ais} measurements except maximum one (depending on whether it have \gls{ais} transceiver or not) can be considered as clutter. If we then make the same assumptions as for radar measurements with respect to uniform spatial distribution and Poisson density distribution, we can estimate the expected number of \gls{ais} `clutter' measurements \( \lambda_{AIS} \) based on the amount of targets with \gls{ais} transmitters and the observation area (\ref{eq:ais_clutter_density}), where \(r_{radar}\) is the radar range. This estimate could be calculated for a single frame, or averaged over a sliding window to reflect the \gls{ais} message flow over time since \gls{ais} transmission is not synchronised with the radar period. The resulting score function would be (\ref{eq:ais_score_function2}).
 
 \begin{equation}\label{eq:ais_clutter_density}
 \lambda_{AIS} = \frac{n_{AIS}}{\pi r_{radar}^2}
@@ -304,7 +338,7 @@ Since the \gls{ais} measurements are inherently labelled, then for a single targ
 Of the three scoring methods explored, only the first and last is usable and mathematically sane. The second approach would yield scores so bad that the hypotheses containing an \gls{ais} measurement would never be selected, hence working against its purpose. Testing has shown that both the first and last method gives an improvement over pure radar tracking, and since the last method gives a little more improvement since it scores the \gls{ais} measurements with a reasonable values compared to the radar measurements, hence not giving the \gls{ais} measurements an enormous advantage or disadvantage. The third method is used in all the simulations in Chapter~\ref{chapter:results}.
 
 \subsection{Predict to radar time}
-All gated and filtered states from Section~\ref{sec:ais_gate_filter_score} is then predicted forward to  the time of the radar measurements. This time delta will differ based on the time of the AIS measurement. Radar measurements are then gated for each predicted state and covariance, whereon a fused hypothesis are created for each radar measurement inside the gate. If there is no radar measurements inside the \gls{gate}, a pure \gls{ais} hypothesis are created. 
+All gated and filtered states from Section~\ref{sec:ais_gate_filter_score} is then predicted forward to the time of the radar measurements. This time delta will differ based on the time of the AIS measurement. Radar measurements are then gated for each predicted state and covariance, whereon a fused hypothesis are created for each radar measurement inside the gate. If there is no radar measurements inside the \gls{gate}, a pure \gls{ais} hypothesis are created. 
 
 \subsubsection{Fused hypotheses}
 The predicted state and covariance is then filtered with the gated radar measurement according to (\ref{eq:kalman_measurement_update}). The radar measurement is scored according to (\ref{eq:radar_score_function}), and the hypothesis score is the sum of the AIS and radar score.
