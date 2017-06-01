@@ -10,7 +10,7 @@ It will be assumed throughout this thesis that radar data is processed, as outli
 A local Cartesian NED-frame, like \gls{utm} will be used throughout this thesis, with the assumption than all input sensors are transformed to this frame (see Section~\ref{subsec:frame_conversion}). This local projection from a geodetic coordinate system to a Cartesian coordinate system is acceptable as long as the the area the system is working on is within one grid. A global geodetic frame, like WGS84 would be preferable in situations where the system tracks object over world-scale lengths but would yield non-linear equations of motion.
 
 \subsection{Constant velocity model}
-A target state (\ref{eq:state_vector}) is modelled with position and velocity in a 2D Cartesian frame where the positive \(x\)-axis is pointing east and the positive \(y\)-axis is pointing north. The two latest states are the velocities in their respective direction.
+A target's state (\ref{eq:state_vector}) is modelled with position and velocity in a 2D Cartesian frame where the positive \(x\)-axis is pointing east and the positive \(y\)-axis is pointing north. The two latest states are the velocities in their respective direction.
 \begin{equation}
 \V{x} = \begin{bmatrix}
 x & y & \dot{x} & \dot{y}
@@ -67,9 +67,7 @@ T  			&= \text{time step} \\
 \end{equation*}
 
 \section{Track Initiation}
-In comparison with \gls{homht}, which treats every measurement as a potential new track 
-%since its hypotheses are essentially different ways of organizing its measurements into tracks, which are repeated for every iteration,
- \gls{tomht} does not have any built-in initialization of tracks since it only maintains already existing tracks with track splitting and measurement-to-track association for every scan. To remedy this lack, we need an algorithm that can find consistent and predictable patterns in an assumed uniformly distributed measurement space of clutter. 
+In comparison with \gls{homht}, which treats every measurement as a potential new track \gls{tomht} does not have any built-in initialization of tracks since it only maintains already existing tracks with track splitting and measurement-to-track association for every scan. To remedy this lack, we need an algorithm that can find consistent and predictable patterns in an assumed uniformly distributed measurement space of clutter. 
 
 In this work, new tracks are initiated with 2/2 \& m/n logic~\cite{Vo2015} on the unused measurements after each MHT iteration. As the name of the method indicates, this is a two step verification, where the first act as a rough filter and the second as a fine filter. As a common in most tracking systems, the radar clutter is assumed uniformly distributed in the measurement area. 
 %This assumption is quite rough in the radial measurement space, and even worse approximation in Cartesian measurement space, as illustrated in \Cref{fig:clutter_radial,fig:clutter_cartesian}.  Although far from perfect, tests shows that we still get satisfactory performance from the 2/2\&m/n method.
@@ -137,6 +135,10 @@ When a new set of unused measurements arrive from the tracker, all the prelimina
 
 For preliminary tracks that have enough passed measurements a new initial target is sent to the tracker. All preliminary tracks with check counter above the threshold is categorized as dead and deleted. 
 
+\subsection{AIS aiding}
+Since we might have AIS data available, it would be desirable to use this to improve the time and reliability of the initialization. In the same way as unused radar measurements are the input to the initialization procedure, we can use the unused AIS measurements to skip the first 2/2 filtering and create a preliminary track for each AIS measurement. This way we are giving the AIS measurements a little more `weight', but as this tracking system is based on AIS \emph{aiding} we still want the m/n filtering to be done with radar measurements. To avoid creating duplicate preliminary tracks for the same \gls{mmsi} over time, only unused AIS measurements with a MMSI not in the preliminary tracks are created. These choices are highly design specific and many other approaches is possible. 
+
+
 \section{MHT Overview}
 \begin{figure}
  \centering
@@ -161,7 +163,7 @@ To illustrate how this \gls{mht} system works we can look at an example of a tar
 \caption{Hypotheses when turning}\label{fig:hypotheses_when_turning}
 \end{figure}
 
-\section{Process radar measurements}
+\section{Process radar measurements}\label{sec:process_radar_measurements}
 \subsection{Predict to radar time}
 To compare new radar measurements with existing hypotheses, we should predict their states to the same time as the radar measurements, which can be done with the Kalman filter `time update' equation (\ref{eq:kalman_timeUpdate}) and the motion model from Section~\ref{sec:motion-model}. The residual covariance (\ref{eq:residual_covariance}), which is a part of the `measurement update' sequence of a Kalman filter are also calculated as the residual covariance is needed in the gating and these matrices are not dependent on the measurement residual.
 \begin{equation}\label{eq:kalman_timeUpdate}
@@ -189,7 +191,7 @@ To limit the number of hypotheses the leaf node have to create, the measurements
 \begin{figure}
 \centering
 \includegraphics[width = .8\textwidth]{Figures/radar_gating.pdf}
-\caption{Radar gating}\label{fig:radar_gating}
+\caption{Gating at radar time}\label{fig:radar_gating}
 \end{figure}
 \begin{equation}\label{eq:gate}
 \begin{gathered}
@@ -208,7 +210,7 @@ NIS = \V{\tilde{z}}^T	\M{S}^{-1} \V{\tilde{z}} \leq \eta^2
 \begin{tabular}{c c c c c c c c}
 Confidence 	& 70\% 	& 80\% 	& 90\% 	& 95\% 	& 97.5\% 	& 99\% 	& 99.5\% \\ 
 \midrule
-\(\eta^2\) 	& 2.41 	& 3.22 	& 4.61 	& 5.99 	& 7.38 		& 9.21 	& 10.60
+\(\eta^2_{df=2}\) 	& 2.41 	& 3.22 	& 4.61 	& 5.99 	& 7.38 		& 9.21 	& 10.60
 \end{tabular}\caption{Inverse \(\chi^2\) \gls{cdf} for two degrees of freedom}
 ~\label{tab:chi_square}
 \end{table}
@@ -216,12 +218,12 @@ Confidence 	& 70\% 	& 80\% 	& 90\% 	& 95\% 	& 97.5\% 	& 99\% 	& 99.5\% \\
 \subsection{Filter, score and create new nodes}
 The scoring used in this tracking system is based on a dimensionless score function by Bar-Shalom~\cite{Bar-Shalom2007}. His paper discusses the issue of scoring measurement-to-track associations and comparing scores based on different numbers of measurement and measurement dimensions. He proposes a dimensionless \emph{likelihood ratio}, which is the \gls{pdf} of a measurement having originating from the track, divided by the \gls{pdf} of it not originating from the track.
 
-Each pure radar \gls{track hypothesis} is scored according to (\ref{eq:radar_score_function}).  The cumulative score assigned to a hypothesis is the sum of its parent and its own score.
+Each pure radar \gls{track hypothesis} is scored according to (\ref{eq:radar_score_function}), and the cumulative score assigned to a hypothesis is the sum of its parent and its own score.
 \begin{equation}\label{eq:radar_score_function}
-\mathrm{NLLR} = \frac{1}{2} NIS + \ln \frac{\lambda_{ex} |2 \pi S|^{1/2}} {P_D}		
+\mathrm{NLLR}_{Radar} = \frac{1}{2} NIS + \ln \frac{\lambda_{ex} |2 \pi S|^{1/2}} {P_D}		
 \end{equation}
 \begin{equation}
-\mathrm{cNLLR}_k^j \triangleq \sum_{l=0}^k NLLR_{i,j}(l)
+\mathrm{cNLLR} \triangleq \sum NLLR
 \end{equation}
 
 \subsubsection{Zero hypothesis}\label{subsubsec:radar_zero_hypothesis}
@@ -245,16 +247,16 @@ For every radar measurement inside the gate in (\ref{eq:gate}), a new track hypo
 \end{equation*}
 
 \section{Process AIS measurements}\label{sec:process_ais_measurements}
-As elaborated in Section~\ref{sec:ais_preprocessing} all AIS measurements are preprocessed to remove out-of-order messages and ID-swap errors. And for each radar scan, only the latest AIS update from each target (\gls{mmsi} number) are passed through to the MHT tracking loop.
+As elaborated in Section~\ref{sec:ais_preprocessing} all AIS measurements are preprocessed to remove out-of-order messages and ID-swap errors. And for each radar scan, only the latest AIS update from each target (\gls{mmsi} number) are passed through to the MHT tracking loop. All \gls{ais} measurements outside the radar surveillance region is also removed from the measurement set. 
 
-The integration of AIS measurements into the MHT framework is not obvious and multiple approaches is possible. Since the AIS and radar measurement originates from different times, only sequential update methods~\cite{Bar-Shalom1995} are considered in this work. The first step in any approach would be to decide which AIS measurements the leaf node shall consider. The radar measurements usually arrives at fixed intervals and is normally not synchronized to an external clock. \gls{ais} on the other hand is transmitted at asynchronous intervals and the messages are time stamped with \gls{utc} time in whole seconds. These properties leads to a finite and in most cases relatively small number of possible \gls{ais} time stamps in between each radar scan. The long runtime for each iteration to a \gls{mht} algorithm favours synchronous processing of both \gls{ais} and \gls{radar} measurements at the arrival of each radar scan. This leads to two alternatives to gating; compare and gate AIS measurements at the AIS message times or predict the AIS measurements forward to the radar measurements time and gate at the same time as radar measurements.
+The integration of AIS measurements into the MHT framework is not obvious and multiple approaches is possible. Since the AIS and radar measurement originates from different times, only sequential update methods~\cite{Bar-Shalom1995} are considered in this work. The first step in any approach would be to decide which AIS measurements the leaf node shall consider. The radar measurements usually arrives at fixed intervals and is normally not synchronized to an external clock. \gls{ais} on the other hand is transmitted at asynchronous intervals and the messages are time stamped with \gls{utc} time in whole seconds. These properties leads to a finite and in most cases relatively small number of possible \gls{ais} time stamps in between each radar scan. The long runtime for each iteration for a \gls{mht} algorithm favours synchronous processing of both \gls{ais} and \gls{radar} measurements at the arrival of each radar scan (synchronous processing). This leads to two alternatives to gating; compare and gate AIS measurements at the AIS message times or predict the AIS measurements forward to the radar measurements time and gate at the same time as radar measurements.
 
 \begin{algorithm}[H]
 \caption{AIS gating at AIS time}\label{alg:ais_gating_at_ais_time}
 \begin{algorithmic}[1]
 \Procedure{Node::gateAisMeasurements}{AISmeasurements}
 \State{} \(M0 \gets AISmeasurements\)
-\State{}  aisTimes \( \gets \) Set(AISmeasurements.times) 
+\State{}  aisTimes \( \gets \) Set(M0.times) 
 \For{time \(\ in \) aisTimes}
 \State{} \(T \gets time - node.time \)
 \State{} \( \V{\bar{x}} = \M{\Phi}(T) \V{x_0} \)
@@ -268,26 +270,39 @@ The integration of AIS measurements into the MHT framework is not obvious and mu
 \State{} \( \V{z} \gets measurement.value \)
 \State{} \( \V{\tilde{z}} \gets \V{z} - \M{H} \V{\bar{x}} \)
 \State{} NIS \( \gets \V{\tilde{z}}^T \M{S}^{-1} \V{\tilde{z}} \)
-\State{} insideGate \( \gets NIS \leq \eta^2 \)
+\State{} aisInsideGate \( \gets NIS \leq \eta^2 \)
+\If{aisInsideGate}
+\State{} Filter \(\V{\bar{x}}\) with measurement
+\State{} Predict to radar time
+\For{radarMeasurement \(in\) radarMeasurements}
+\State{} Gate radar measurement as with pure radar measurements
+\For{radarMeasurement inside gate}
+\State{} Create fused node
+\EndFor{}
+\EndFor{}
+\EndIf{}
 \EndFor{}
 \EndFor{}
 \EndFor{}
 \EndProcedure{}
 \end{algorithmic}
 \end{algorithm}
-Algorithm~\ref{alg:ais_gating_at_ais_time} outlines the main steps when gating at \gls{ais} times. The first step would be to find all the different time stamps in the \gls{ais} \gls{measurement list}. Since most maritime radars operate between 24 and 48 \gls{rpm} and the AIS time in seconds is always integer, a maximum of 2 different AIS times will exist in between two radar scans. Then for each time in the time set, a predicted state and covariance is calculated and the measurements that are stamped with this time is picked out of the \gls{ais}measurement list. Since \gls{ais} messages transmit accuracy as either high or low, two different measurement covariance might be needed. The covariance residual is calculated for each accuracy among the measurements, whereon a the measurements are gated
-
-%  For all AIS measurement inside their gates, a filtered state and covariance is calculated and predicted forward to the radar measurements time. This prediction is then used to gate radar measurements and create a fused node for each radar measurement inside this gate.
-
-\begin{figure}
+Algorithm~\ref{alg:ais_gating_at_ais_time} outlines the main steps when gating at \gls{ais} times. The first step is to find all the different time stamps in the \gls{ais} \gls{measurement list}. Since most maritime radars operate between 24 and 48 \gls{rpm} and the AIS time in seconds is always integer, a maximum of 2 different AIS times will exist in between two radar scans of a 24 \gls{rpm} \gls{radar}. Then for each time in the time set, a predicted state and covariance is calculated and the measurements that are stamped with this time is picked out of the \gls{ais}measurement list. Since \gls{ais} messages transmit accuracy as either high or low, two different measurement covariance might be needed. The covariance residual is calculated for each accuracy among the \gls{ais} measurements, whereon the \gls{ais} measurements are gated, filtered and scored. The filtered state is then predicted to the radar time, where the predicted state and residual covariance are used to gate radar measurements as in Section~\ref{sec:process_radar_measurements}. In the situation were no radar measurements is inside the gate, a pure \gls{ais} hypothesis is created at the predicted state (radar time). Whether or not it is desirable to create an \gls{ais} `dummy' hypothesis / pure \gls{ais} hypothesis if there are any radar measurements inside the gate is a design choice. It will lead to a further increase in tree growth and computational cost, and might not lead to better tracking performance since the residual covariance after filtering with an \gls{ais} measurement would be relatively small and the difference between the pure \gls{ais} hypothesis and the fused hypotheses would be marginal.
+\begin{figure}[H]
 \centering
-\includegraphics[width = .8\textwidth]{Figures/AIS_gating.pdf}
-\caption{AIS gating}\label{fig:ais_gating}
+\includegraphics[width = .8\textwidth]{Figures/gating_at_ais_time.pdf}
+\caption{Gating at AIS time}\label{fig:gating_at_ais_time}
 \end{figure}
+Figure~\ref{fig:gating_at_ais_time} illustrates a situation where a single leaf node is showed in the upper left corner at \(t=0\), two red \gls{ais} measurements (A1 and A2) with position and velocity at \(t=1\) and \(t=2\) respectively and three blue radar measurements (R1, R2 and R3) at \(t=2.5\). \(\V{\bar{x}_1}\) and \(\V{\bar{x}_2}\) are the predicted states for \gls{ais} messages at \(t=1\) and \(t=2\) respectively, and the solid blue circles are representing the high accuracy gates while the dotted blue circles are representing the low accuracy gates. In this scenario only A1 is inside the gate, and a filtered state \(\V{\hat{x}}_{A1}\) and covariance \(\M{\hat{P}}_{A1}\) is calculated. \(\V{\hat{x}}_{A1}\) is then predicted to \(t=2.5\) (\(\V{\bar{x}}_{A1}\) and \(\M{\bar{P}}_{A1}\)) and radar measurements are gated with the black solid circle based on the residual covariance to \(\M{\bar{P}}_{A1}\). Only R1 is inside this gate, thus a single fused hypothesis (F1) is created based on \(\V{\bar{x}}_{A1}\) filtered with R1.
 
-If gating at radar time and gate them based on the predicted origin node state \(\V{\hat{x}}_1\) and AIS measurement covariance. This approach could lead to unwanted AIS measurements inside the gate since the AIS measurements from other vessels can be predicted into the gate, thus leading to a more challenging association. This is exemplified in Figure~\ref{fig:ais_gating} A2, where AIS measurement 2 would be inside the radar measurement gate but not in the AIS time gates.
+\begin{figure}[H]
+\centering
+\includegraphics[width = .8\textwidth]{Figures/gating_at_radar_time.pdf}
+\caption{Gating at radar time}\label{fig:gating_at_radar_time}
+\end{figure}
+If gating at radar time, all \gls{ais} measurements are predicted to radar time, and the predicted measurements are gated with the same gate at the radar measurements. By using the same gate on all measurements we assume that the radar measurement covariance is larger than the largest \gls{ais} measurement covariance, which is a reasonable assumption. This approach could however lead to unwanted AIS measurements inside the gate since the AIS measurements from other vessels can be predicted into the gate, thus leading to a more challenging association. This is exemplified in Figure~\ref{fig:gating_at_radar_time}, where AIS measurement A2 would be inside the gate when gating at radar time but not if gating at \gls{ais} time. For all \gls{ais} measurements inside the gate, a complete set of fused hypotheses are created. In our example this would be (\(\overline{A1}\),R1), (\(\overline{A1}\), R2), (\(\overline{A2}\), R1) and (\(\overline{A2}\),R2). Since pure radar hypotheses are created prior to \gls{ais} processing it is not necessary to create any new pure radar hypotheses. 
 
-In this work, the first approach is used for its assumed better performance and utilization of original data rather than predicted data. 
+In this work, the first approach is used for its assumed better performance and utilization of original data rather than predicted data. Pure \gls{ais} hypotheses are only created when no radar measurements fall inside the gate.
 
 \subsection{Predict to AIS times}
 To gate the AIS measurements, we first have to predict the target state and covariance (\ref{eq:predicted_origin_state_ais_time}) for each of the AIS time stamps (\ref{eq:ais_time_delta}) in the received AIS measurements. Since AIS only transmits a single integrity status, better or worse than 10 meter, maximum two possible \(\M{R}_{AIS}\) must be considered. With maximum two different time stamps and two different accuracies, a maximum of four different gates must be considered.
@@ -312,39 +327,45 @@ To gate the AIS measurements, we first have to predict the target state and cova
 \end{equation}
 
 \subsection{Gate, filter and score}\label{sec:ais_gate_filter_score}
-For each leaf node all AIS measurements are gated with the gate matching their time and accuracy. The measurements that pass the gating is then filtered with the predicted state and covariance matching its time, giving rise to an intermittent node (\ref{eq:filtered_ais_node}).
+For each leaf node, all AIS measurements are gated with the gate matching their time, accuracy and threshold (Table~\ref{tab:chi_square_4_dof<}). The measurements that pass the gating is then filtered with the predicted state and covariance matching its time, giving rise to an intermittent node (\ref{eq:filtered_ais_node}).
+\begin{table}
+\centering
+\begin{tabular}{c c c c c c c c}
+Confidence 	& 70\% 	& 80\% 	& 90\% 	& 95\% 	& 97.5\% 	& 99\% 	& 99.5\% \\ 
+\midrule
+\(\eta^2_{df=4}\) 	& 4.88 	& 5.99 	& 7.78 	& 9.49 	& 11.14 & 13.28	& 14.86
+\end{tabular}\caption{Inverse \(\chi^2\) \gls{cdf} for four degrees of freedom}
+~\label{tab:chi_square_4_dof}
+\end{table}
 \begin{equation}\label{eq:filtered_ais_node}
 \V{\hat{x}}_1 = \V{\bar{x}}_1 + \M{K} \V{\tilde{z}}
 \end{equation}
 
-Since the score for radar measurements is a dimensionless likelihood ratio, we must use the same dimensionless likelihood on the \gls{ais} measurements. Depending on how we want the \gls{ais} to affect our tracking, three different scoring strategies are explored. The first approach is to view the \gls{ais} as a pure \emph{aiding}, where its only purpose is to improve the gating and uncertainty for the radar measurements. In this case, all \gls{ais} measurements are gated with a logarithmic score of zero, leading to neither improvement or worsening of the accumulative score of the track.
+Depending on how we want the \gls{ais} to affect our tracking, two different scoring strategies are explored. The first approach is to view the \gls{ais} as a pure \emph{aiding}, where its only purpose is to improve the gating and uncertainty for the radar measurements. In this case, all \gls{ais} measurements are gated with a logarithmic score of zero, leading to neither improvement or worsening of the accumulative score of the track.
 
-A second approach is to modify the score function for radar measurements. The maybe simplest way of doing this is to score according to (\ref{eq:ais_score_function1}), which is a modified version of the radar measurement score function (\ref{eq:radar_score_function}). The first difference being that the probability of detection is changed with the AIS probability of receive, which is approximated to unity. Since the \gls{ais} measurements does not contain Poisson distributed clutter and the only way to `remove' the clutter aspect of the scoring is to set \( \lambda_{ex} \) to 1, which is to say that there is an enormous amount of clutter and would consequently yield very bad scores for \gls{ais} measurements.
-
-\begin{equation}\label{eq:ais_score_function1}
-\mathrm{NLLR} = \frac{1}{2} NIS + \ln |2 \pi S|^{1/2} 
-\end{equation}
-
-Since the \gls{ais} measurements are inherently labelled, then for a single target all \gls{ais} measurements except maximum one (depending on whether it have \gls{ais} transceiver or not) can be considered as clutter. If we then make the same assumptions as for radar measurements with respect to uniform spatial distribution and Poisson density distribution, we can estimate the expected number of \gls{ais} `clutter' measurements \( \lambda_{AIS} \) based on the amount of targets with \gls{ais} transmitters and the observation area (\ref{eq:ais_clutter_density}), where \(r_{radar}\) is the radar range. This estimate could be calculated for a single frame, or averaged over a sliding window to reflect the \gls{ais} message flow over time since \gls{ais} transmission is not synchronised with the radar period. The resulting score function would be (\ref{eq:ais_score_function2}).
+A second approach is to adapt the radar score function~\cite{Bar-Shalom2007} to the \gls{ais} paradigm. Since the \gls{ais} measurements are inherently labelled, then viewed from a single target, all \gls{ais} measurements except maximum one (depending on whether it have \gls{ais} transceiver or not) can be considered as clutter. If we then make the same assumptions as for radar measurements with respect to uniform spatial distribution and Poisson density distribution, we can estimate the expected number of \gls{ais} `clutter' measurements \( \lambda_{AIS} \) based on the amount of targets with \gls{ais} transmitters and the observation area (\ref{eq:ais_clutter_density}), where \(r_{radar}\) is the radar range. The clutter is in this context any measurement that does not belong to the target and which the target can erroneously utilize. The estimated clutter density could be calculated for a single frame, or averaged over a sliding window to reflect the \gls{ais} message flow over time since \gls{ais} transmission is not synchronised with the radar period. The resulting score function would be (\ref{eq:ais_score_function2}).
 
 \begin{equation}\label{eq:ais_clutter_density}
 \lambda_{AIS} = \frac{n_{AIS}}{\pi r_{radar}^2}
 \end{equation}
 
 \begin{equation}\label{eq:ais_score_function2}
-\mathrm{NLLR} = \frac{1}{2} NIS + \ln \lambda_{AIS} |2 \pi S|^{1/2} 
+\mathrm{NLLR}_{AIS} = \frac{1}{2} NIS + \ln \lambda_{AIS} |2 \pi S|^{1/2} 
 \end{equation}
 
-Of the three scoring methods explored, only the first and last is usable and mathematically sane. The second approach would yield scores so bad that the hypotheses containing an \gls{ais} measurement would never be selected, hence working against its purpose. Testing has shown that both the first and last method gives an improvement over pure radar tracking, and since the last method gives a little more improvement since it scores the \gls{ais} measurements with a reasonable values compared to the radar measurements, hence not giving the \gls{ais} measurements an enormous advantage or disadvantage. The third method is used in all the simulations in Chapter~\ref{chapter:results}.
+Testing has shown that both the first and last method gives an improvement over pure radar tracking, and since the last method gives a little more improvement since it scores the \gls{ais} measurements with a reasonable values compared to the radar measurements, hence not giving the \gls{ais} measurements an enormous advantage or disadvantage. The second method is used in all the simulations in Chapter~\ref{chapter:results}.
 
 \subsection{Predict to radar time}
 All gated and filtered states from Section~\ref{sec:ais_gate_filter_score} is then predicted forward to the time of the radar measurements. This time delta will differ based on the time of the AIS measurement. Radar measurements are then gated for each predicted state and covariance, whereon a fused hypothesis are created for each radar measurement inside the gate. If there is no radar measurements inside the \gls{gate}, a pure \gls{ais} hypothesis are created. 
 
 \subsubsection{Fused hypotheses}
-The predicted state and covariance is then filtered with the gated radar measurement according to (\ref{eq:kalman_measurement_update}). The radar measurement is scored according to (\ref{eq:radar_score_function}), and the hypothesis score is the sum of the AIS and radar score.
+The predicted state and covariance is then filtered with the gated radar measurement according to (\ref{eq:kalman_measurement_update}). The radar measurement is scored according to (\ref{eq:radar_score_function}), and the hypothesis score is a weighted sum of the AIS and radar score (\ref{eq:weighted_score}).
+\begin{equation}\label{eq:weighted_score}
+\mathrm{NLLR} = \frac{1}{2} \mathrm{NLLR}_{AIS} + \frac{1}{2} \mathrm{NLLR}_{Radar}
+\end{equation}
 
 \subsubsection{Pure AIS hypotheses}\label{subsec:pure_ais_hypotheses}
-If no radar measurements are present in the gate, pure AIS hypotheses are created. This can be the situation when a target is broadcasting an AIS message, but is either in radar shadow or is not detected by the radar for any reason. These hypotheses are not created when one or more radar measurements are available, based on the assumption that if a radar measurement is present, the difference between a fused hypothesis and a pure AIS hypothesis is quite small since the AIS measurement covariance typically will be much smaller than the radar measurement covariance, leading to a fused state very close to the AIS measurement. The pure AIS hypothesis will use its predicted state, covariance and score, somewhat similar to radar zero hypotheses.
+If no radar measurements are present in the gate, pure AIS hypotheses are created. This can be the situation when a target is broadcasting an AIS message, but is either in radar shadow or is not detected by the radar for any reason. These hypotheses are not created when one or more radar measurements are available, based on the assumption that if a radar measurement is present, the difference between a fused hypothesis and a pure AIS hypothesis is quite small since the AIS measurement covariance typically will be much smaller than the radar measurement covariance, leading to a fused state very close to the AIS measurement. The pure AIS hypothesis will use its predicted state and covariance and be  scored with \(\mathrm{NLLR}_{AIS}\), somewhat similar to radar zero hypotheses.
 
 \section{Clustering}
 The problem of finding the globally optimal set of track hypotheses increases exponentially with the number of hypotheses in the problem. To reduce the size of the problem, it is desirable to split it into smaller independent problems. Both because it enables parallel computation and it reduces the total cost of solving the problem. Track trees that have common measurements must be solved together, since they can have mutual exclusive leaf nodes. The clustering can be done efficiently through \gls{bfs} or \gls{dfs} on a graph made from the \gls{track hypothesis tree}.
@@ -354,7 +375,7 @@ By constructing a 0--1 adjacency matrix describing the connection between all th
 \section{Optimal data association}\label{sec:optim_data_association}
 The aim of this section is to elaborate the use of ILP to solve the data association problem in MHT that arises when there are multiple, possibly mutual exclusive, possibilities of measurement arrangements within the existing set of tracks.
 
-When the targets are divided into independent clusters, each of them can be treated as a global problem where we want to minimize the cost or maximize the score of the selected \glspl{track hypothesis} (leaf nodes). The selected \glspl{track hypothesis} must also fulfil the constraints, that each measurement can only be a part of one track, and that minimum and maximum one track hypothesis can be selected from each target. Since only binary values, selected or not selected, is possible for selection of hypotheses, the problem becomes an \gls{ilp}. In the case where a cluster is only containing one target tree, the best hypothesis can be selected by running a search among the leaf nodes after the highest score, since none of the leaf nodes are excluding other leaf nodes in other target trees. This will often be the case for targets that are largely spaced out, and their gates are not and have not overlapped in a while. For any other case, where there are two or more targets in a cluster, the procedure in Section~\ref{subsec:integer_linear_programming} must be carried out.
+When the targets are divided into independent clusters, each of them can be treated as a global problem where we want to minimize the cost or maximize the score of the selected \glspl{track hypothesis} (leaf nodes). The selected \glspl{track hypothesis} must also fulfil the constraints, that each measurement can only be a part of one track, and that exactly one track hypothesis must be selected from each target. Since only binary values, selected or not selected, is possible for selection of hypotheses, the problem becomes an \gls{ilp}. In the case where a cluster is only containing one target tree, the best hypothesis can be selected by running a search among the leaf nodes after the highest score, since none of the leaf nodes are excluding other leaf nodes in other target trees. This will often be the case for targets that are largely spaced out, and their gates are not and have not overlapped in a while. For any other case, where there are two or more targets in a cluster, the procedure in Section~\ref{subsec:integer_linear_programming} must be carried out.
 
 \subsection{Integer Linear programming}\label{subsec:integer_linear_programming}
 The essence of any optimization problem is a cost function and a set of constraints. In our problem, we want to select the combination of hypotheses (leaf nodes) that gives the highest score / lowest cost, while not selecting any measurement more than one time and ensure that we select minimum and maximum one hypothesis from each target. 
@@ -368,12 +389,12 @@ Our score function is the sum of the selected node scores, and since we are usin
 \label{eq:objective_funtion}
 \end{equation}
 
-To ensure that we are selecting the same measurement maximum one time, a binary matrix \( \M{A_1} \) describing the association between nodes and measurements are created.\(\M{A_1}\) has as many rows are there are real measurement and as as many columns as there are hypotheses. All radar- and AIS measurement are real measurement, whereas zero nodes does not contain any real measurements. \( \M{A_1} \) has value 1 in the intersections of hypotheses and measurements that are associated, 0 elsewhere. The order of the columns in \( \M{A_1} \) is the same as the rows in \( \V{c} \) and \( \V{\tau} \). Since we are only limiting a maximum of one usage of each measurement and no minimum, the constraint becomes an inequality constraint (\ref{eq:inequality_constraint}) where \( \V{1} \) is a vector of ones with the same dimension as \( \V{\tau} \).
+To ensure that we are selecting the same measurement maximum one time, a binary matrix \( \M{A_1} \) describing the association between nodes and measurements are created.\(\M{A_1}\) has as many rows are there are real measurement and as as many columns as there are track hypotheses. All radar- and AIS measurement are real measurement, whereas dummy nodes does not contain any real measurements. \( \M{A_1} \) has value 1 in the intersections of track hypotheses and measurements used by that track hypothesis, 0 elsewhere. The order of the columns in \( \M{A_1} \) is the same as the rows in \( \V{c} \) and \( \V{\tau} \). Since we are only limiting a maximum of one usage of each measurement and no minimum, the constraint becomes an inequality constraint (\ref{eq:inequality_constraint}) where \( \V{1} \) is a vector of ones with the same dimension as \( \V{\tau} \).
 \begin{equation}\label{eq:inequality_constraint}
 \M{A_1} \V{\tau} \leq \V{1}
 \end{equation}
 
-The second constraint we need to impose is that we need to select minimum and maximum one hypothesis from each tree. This can be done by creating a boolean matrix \( \M{A_2} \) which describes the relationship between hypotheses and trees / targets. \( \M{A_2} \) will have as many rows as there are targets in the cluster, and columns as \( \M{A_1} \). The intersections between hypotheses and targets that belong together is value 1, all other is value 0. Since this constraint has a fixed requirement, it is formulated as an equality constraint (\ref{eq:equality_constraint}) with \( \V{1} \) as in (\ref{eq:inequality_constraint}).
+The second constraint we need to impose is that we need to select exactly one hypothesis from each tree. This can be done by creating a boolean matrix \( \M{A_2} \) which describes the relationship between hypotheses and trees / targets. \( \M{A_2} \) will have as many rows as there are targets in the cluster, and columns as \( \M{A_1} \). The intersections between hypotheses and targets that belong together is value 1, all other is value 0. Since this constraint has a fixed requirement, it is formulated as an equality constraint (\ref{eq:equality_constraint}) with \( \V{1} \) as in (\ref{eq:inequality_constraint}).
 \begin{equation}\label{eq:equality_constraint}
 \M{A_2} \V{\tau} = \V{1}
 \end{equation}
@@ -427,7 +448,7 @@ An example based on Figure~\ref{fig:hyp_forest} at time step 2, where the \(\M{A
 The problem (\ref{eq:optim_formulation}) is formulated on standard form, which enables the use of existing off-the-shelf ILP solvers. There are a lot of off-the-shelf \gls{ilp} and \gls{milp} solvers on the marked, both free open source and commercial. The performance difference of some solvers where tested in~\cite{Liland_2017}, where the difference where found marginal,  most likely because each optimization problem is relatively small and the initialization and preprocessing of the solver and problem played a significant part of the runtime compared to the actual solving. In this work, Google Optimization Tools is used as interface between the programming language and the solver. The default solver CBC was used exclusively in this work as its performance was on par with the others tested in~\cite{Liland_2017}. 
 
 \section{Dynamic window}
-For any MHT to be realistic over time it need to have a sliding window removing the unused hypotheses N steps back in time. The sliding window size (N) could be a static design parameter or a function of the runtime of that tree, which reflects the overall size of the tree. This enables the system to adapt its core parameters to guarantee its runtime demands.
+For any MHT to be realistic over time it need to have a sliding window removing the unused hypotheses N steps back in time. The sliding window size (N) could be a static design parameter or a function of the runtime of that tree, which reflects the overall size of the tree. This enables the system to adapt its core parameters to guarantee its runtime demands. This scaling of N proved itself very efficient through testing and development, but is disabled in Chapter~\ref{chapter:results} for true comparison between different windows sizes.
 
 \section{N-Scan pruning}
 To keep the computational cost within reasonable limits, it is necessary to limit the amount of time steps backwards in time that the algorithm computes. This is done by removing all branches but the active track hypothesis at the current root node, and assign the one remaining node as new root node. This procedure is graphically explained in Figure~\ref{fig:pruned_tree}, where a solid square frame indicates the current root node, and a dotted square frame indicates the new root node. The bold arrows in the figure represents the active track.
@@ -445,9 +466,15 @@ A more advanced approach could be to utilize map data to estimate whether or not
 In this work, only range and score termination is implemented.
 
 \section{Track smoothing}
-After each iteration of the MHT algorithm a track list based on the selected hypotheses from Section~\ref{sec:optim_data_association} is passed forward to the operator and guidance system. Both human operators and guidance systems will try to predict the targets behaviour based on their historical track. To improve the visualisation for this purpose it is possible to smooth the tracks based on the real measurements in the track and masking the zero measurements in a Kalman smoother~\cite{Brown2012} with the same model as used in the predictions. As illustrated in Figure~\ref{fig:track_smoothing}, this will lead to a smother and in most cases a more accurate representation of the true track since it avoids the straight lines caused by dead reckoning. This smoothing will however not affect the \gls{tracking} performance since it is done after miss detections are corrected and only on the track list sent out of the tracking module.
+After each iteration of the MHT algorithm a track list based on the selected hypotheses from Section~\ref{sec:optim_data_association} is passed forward to the operator and guidance system. Both human operators and guidance systems will try to predict the targets' behaviour based on their historical track. To improve the visualisation for this purpose it is possible to smooth the tracks based on the real measurements in the track and masking the dummy measurements in a Kalman smoother~\cite{Brown2012} with the same model as used in the predictions. As illustrated in Figure~\ref{fig:track_smoothing}, this will lead to a smother and in most cases a more accurate representation of the true track since it avoids the straight lines caused by dead reckoning. The circles represent dummy measurements, while it is real measurements on both sides of the dead reconing period (not plotted to avoid cluttered illustration). Figure~\ref{fig:track_smoothing_zoomed} is the same image zoomed in around the dead reconing area. This smoothing will however not affect the \gls{tracking} performance since it is done after miss detections are corrected and only on the track list sent out of the tracking module.
+\begin{figure}[H]
+\centering
+\includegraphics[trim={10cm 11cm 4cm 4cm},clip=true,height = .4\textheight]{Figures/track_smoothing_dummy_markers.png}
+\caption{Track smoothing zoomed}\label{fig:track_smoothing_zoomed}
+\end{figure}
+
 \begin{figure}
 \centering
-\includegraphics[width = .9\textwidth]{Figures/track_smoothing.png}
+\includegraphics[width = .9\textwidth]{Figures/track_smoothing_dummy_markers.png}
 \caption{Track smoothing}\label{fig:track_smoothing}
 \end{figure}
