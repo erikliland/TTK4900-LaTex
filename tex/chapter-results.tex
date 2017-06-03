@@ -44,7 +44,7 @@ RMSD = \sqrt{\frac{1}{n}\sum_{t=1}^{n}{(\Delta P_t)}^2}
 \centering
 \includegraphics[width = .8\textwidth]{Figures/track_percentage_illustration.pdf}
 \caption{Tracking percentage illustration}\label{fig:track_percentage}
-\end{figure}
+\end{figure}z
 
 \section{Scenario}\label{sec:scenario}
 All simulations in this work is based on a generated scenario, as shown in Figure~\ref{fig:test_scenario}, with black dots marking the initial time and position. The radar range is 5500 meter (~3 \glspl{nm_acr}), which gives an area of surveillance of approximately 95 square km. The scenario contains 16 targets, which all starts inside the observable area of the radar. The scenario contains a mixture of fast and slow moving vessels, some with sharp turns and some almost at stand still. Table~\ref{tab:init_states} shows the initial states of all targets, and the true path is generated once from these initial values.
@@ -68,7 +68,7 @@ From this base scenario, five scenarios where generated with different AIS confi
 \begin{table}
 \centering
 \csvautotabular{{Figures/plots/Scenario_AIS_State.csv}}
-\caption{AIS scenario configuration}\label{tab:ais_scenarios}
+\caption{AIS class scenario configuration}\label{tab:ais_scenarios}
 \end{table}
 
 \begin{figure}
@@ -81,8 +81,33 @@ From this base scenario, five scenarios where generated with different AIS confi
 Both initialization- and tracking performance is averaged over a set of 50 Monte Carlo simulations with differently seeded clutter- and missed detections points. All simulations were done with a sampling interval at 2.5 seconds (24 \gls{rpm}), which is the most common rotation speed on a coastal maritime radar. Since early simulations showed that the variation between the different scenarios when analysing the initialization time and termination of false track were negligible. Based on this, only scenario 0 were used for initialization analysis to avoid excessive plot `duplicates'. Each of the 144 initialization variations and 240 track performance simulations where run 50 times with differently seeded clutter and misdetections on a dual Intel i7--6700 server running Linux Ubuntu with \gls{ssd} storage and 64 GB \gls{ram}.
 
 \section{Initialization results}
+\begin{figure}[H]
+ \centering
+ \includegraphics{Figures/plots/Scenario0_Init-Performance.pdf}
+ \caption{Initiator performance --- Scenario 0}\label{fig:init_performance_scenario0}
+\end{figure}
 
-%Figure: steady-state number of errounous tracks vs. clutter level x (m/n)
+\begin{figure}
+ \centering
+ \includegraphics{Figures/plots/Scenario1_Init-Performance.pdf}
+ \caption{Initiator performance --- Scenario 1}\label{fig:init_performance_scenario1}
+\end{figure}
+\begin{figure}
+ \centering
+ \includegraphics{Figures/plots/Scenario2_Init-Performance.pdf}
+ \caption{Initiator performance --- Scenario 2}\label{fig:init_performance_scenario2}
+\end{figure}
+\begin{figure}
+ \centering
+ \includegraphics{Figures/plots/Scenario3_Init-Performance.pdf}
+ \caption{Initiator performance --- Scenario 3}\label{fig:init_performance_scenario3}
+\end{figure}
+\begin{figure}
+ \centering
+ \includegraphics{Figures/plots/Scenario4_Init-Performance.pdf}
+ \caption{Initiator performance --- Scenario 4}\label{fig:init_performance_scenario4}
+\end{figure}
+
 
 
 
