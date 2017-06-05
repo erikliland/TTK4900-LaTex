@@ -66,6 +66,8 @@ All simulations in this work is based on a generated scenario, shown in Figure~\
 \end{table}
 
 From this base scenario, five scenarios where generated with different AIS configuration on the vessels, see Table~\ref{tab:ais_scenarios}. The first scenario represent the baseline with only radar information available, whereas the rest have some level of AIS information. Scenario 1 adds 50\% class B AIS transmitters, and is representing a situation where all the targets are smaller vessels with some voluntarily installed AIS transceivers. In scenario 3, all vessels have AIS class B installed. This scenario represents a best case situation regarding yacht and leisure vessels from an autonomous anti collision perspective and is only realistic if AIS class B where to be mandatory for these vessel classes. Scenario 2 is the same as scenario 1, with the difference that the vessels have class A transmitters in stead of class B. This gives them higher and smarter rate of transmission, which in theory should improve tracking under challenging conditions. This scenario can be viewed as a few commercial vessels travelling in between a large group of yachts. The last scenario, where all targets are equipped with class A transmitters is the ultimate situation for any fusion tracking system. This case would be realistic in a crowded professional working area, for instance harbours, fishing areas and off-shore installations.
+
+\Cref{fig:measurements_overlaid} show all radar measurements for an entire scenario for the different clutter level overlaid. 
 \begin{table}
 \centering
 \csvautotabular{{Figures/plots/Scenario_AIS_State.csv}}
@@ -82,7 +84,9 @@ From this base scenario, five scenarios where generated with different AIS confi
 Both initialization- and tracking performance are averaged over a set of 20 Monte Carlo simulations with differently seeded clutter- and missed radar detections. All simulations were done with a sampling interval at 2.5 seconds (24 \gls{rpm}), which is the most common rotation speed on a coastal maritime radar. Each of the 540 initialization variations and 180 track performance simulations where run on a dual Intel i7--6700 server running Linux Ubuntu with \gls{ssd} storage and 64 GB \gls{ram}.
 
 \section{Initialization results}
-\Cref{fig:init0_time_2-5,fig:init0_time_2-4,fig:init0_time_2-3,fig:init0_time_2-2,fig:init0_time_1-2,fig:init0_time_1-4,fig:init0_time_1-1,fig:init0_time_3-4,fig:init0_time_1-3,fig:init0_time_3-3,fig:init0_time_3-6,fig:init0_time_3-5}, \cref{fig:init1_time_2-5,fig:init1_time_2-4,fig:init1_time_2-3,fig:init1_time_2-2,fig:init1_time_1-2,fig:init1_time_1-4,fig:init1_time_1-1,fig:init1_time_3-4,fig:init1_time_1-3,fig:init1_time_3-3,fig:init1_time_3-6,fig:init1_time_3-5}, \cref{fig:init2_time_2-5,fig:init2_time_2-4,fig:init2_time_2-3,fig:init2_time_2-2,fig:init2_time_1-2,fig:init2_time_1-4,fig:init2_time_1-1,fig:init2_time_3-4,fig:init2_time_1-3,fig:init2_time_3-3,fig:init2_time_3-6,fig:init2_time_3-5}, \cref{fig:init3_time_2-5,fig:init3_time_2-4,fig:init3_time_2-3,fig:init3_time_2-2,fig:init3_time_1-2,fig:init3_time_1-4,fig:init3_time_1-1,fig:init3_time_3-4,fig:init3_time_1-3,fig:init3_time_3-3,fig:init3_time_3-6,fig:init3_time_3-5} and \cref{fig:init4_time_2-5,fig:init4_time_2-4,fig:init4_time_2-3,fig:init4_time_2-2,fig:init4_time_1-2,fig:init4_time_1-4,fig:init4_time_1-1,fig:init4_time_3-4,fig:init4_time_1-3,fig:init4_time_3-3,fig:init4_time_3-6,fig:init4_time_3-5} show the initialization performance for Scenario 0 to 4 respectively, averaged over the Monte Carlo simulations. Their first line is the amount of true track correctly initialized over time, whereas the second and third line is the amount of falsely initiated tracks. The difference between the two latest is that the first is an accumulation of false track over time, while the last is the number of erroneous tracks alive at the time. These data is summarized in \Cref{fig:init_performance_scenario0,fig:init_performance_scenario1,fig:init_performance_scenario2,fig:init_performance_scenario3,fig:init_performance_scenario4} to better evaluate their performance over a set of variations. For each scenario and initialization setting (m/n), an average cost of the variations (\gls{Pd} and \(\lambda_\phi\)) were calculated based on (\ref{eq:init_score_function}), and the square root of the averaged score is plotted is better see nuances around zero. 
+\Cref{fig:init0_time_2-5,fig:init0_time_2-4,fig:init0_time_2-3,fig:init0_time_2-2,fig:init0_time_1-2,fig:init0_time_1-4,fig:init0_time_1-1,fig:init0_time_3-4,fig:init0_time_1-3,fig:init0_time_3-3,fig:init0_time_3-6,fig:init0_time_3-5}, \cref{fig:init1_time_2-5,fig:init1_time_2-4,fig:init1_time_2-3,fig:init1_time_2-2,fig:init1_time_1-2,fig:init1_time_1-4,fig:init1_time_1-1,fig:init1_time_3-4,fig:init1_time_1-3,fig:init1_time_3-3,fig:init1_time_3-6,fig:init1_time_3-5}, \cref{fig:init2_time_2-5,fig:init2_time_2-4,fig:init2_time_2-3,fig:init2_time_2-2,fig:init2_time_1-2,fig:init2_time_1-4,fig:init2_time_1-1,fig:init2_time_3-4,fig:init2_time_1-3,fig:init2_time_3-3,fig:init2_time_3-6,fig:init2_time_3-5}, \cref{fig:init3_time_2-5,fig:init3_time_2-4,fig:init3_time_2-3,fig:init3_time_2-2,fig:init3_time_1-2,fig:init3_time_1-4,fig:init3_time_1-1,fig:init3_time_3-4,fig:init3_time_1-3,fig:init3_time_3-3,fig:init3_time_3-6,fig:init3_time_3-5} and \cref{fig:init4_time_2-5,fig:init4_time_2-4,fig:init4_time_2-3,fig:init4_time_2-2,fig:init4_time_1-2,fig:init4_time_1-4,fig:init4_time_1-1,fig:init4_time_3-4,fig:init4_time_1-3,fig:init4_time_3-3,fig:init4_time_3-6,fig:init4_time_3-5} show the initialization performance for Scenario 0 to 4 respectively, averaged over the Monte Carlo simulations. Their first plot is the \gls{cpfm} of true track correctly initialized over time, whereas the second and third plot is the amount and density of falsely initiated tracks. The difference between the two latest is that the first is an accumulation of false track over time, while the last is the number of erroneous tracks alive at the time. These data are summarized in \Cref{fig:init_performance_scenario0,fig:init_performance_scenario1,fig:init_performance_scenario2,fig:init_performance_scenario3,fig:init_performance_scenario4} to better evaluate their performance over a set of variations. For each scenario and initialization setting (m/n), an average cost of the variations (\gls{Pd} and \(\lambda_\phi\)) were calculated based on (\ref{eq:init_score_function}), and the normalized square root of the averaged score is plotted is better see nuances close to zero. \(t_{80\%}\) is the time it took to reach 80\% correctly initialized true tracks, and variations that never reaches 80\% is penalized with a high `initialization time' selected to match the worst scenarios.
+
+From \Cref{fig:init_performance_scenario0,fig:init_performance_scenario1,fig:init_performance_scenario2,fig:init_performance_scenario3,fig:init_performance_scenario4} we see that each M row has a peak (low cost) and edges with higher costs. (2/3) and (2/4) are overall good value with a balance between initialization time and the amount of erroneous tracks.
 \begin{equation}\label{eq:init_score_function}
 Cost = t_{80\%} (1 + n_{False Track})
 \end{equation}
@@ -113,6 +117,50 @@ Cost = t_{80\%} (1 + n_{False Track})
 \end{figure}
 
 \section{Tracking results}
+\subsection{Track loss}
+From \cref{fig:scenario0_track_loss,fig:scenario1_track_loss,fig:scenario2_track_loss,fig:scenario3_track_loss,fig:scenario4_track_loss} we can see that the amount of lost tracks are very dependent on the probability of detection \gls{Pd} and window size (N). An interesting observation is the declination of lost tracks with increased clutter when N=1, which is most likely caused by clutter being gated and selected, giving the track a high enough score to not be terminated. 
+
+\Cref{tab:track_loss_improvement} shows the improvement in track loss of the different AIS scenarios compared to the pure radar scenario. 
+
+\begin{table}[H]
+\centering
+\csvautotabular{{Figures/plots/Track_Loss_Improvement.csv}}
+\caption{Track loss improvement relative pure radar}\label{tab:track_loss_improvement}
+\end{table}
+
+\begin{figure}
+\centering
+\includegraphics{Figures/plots/Scenario0_Tracking-TrackLoss.pdf}
+\caption{Scenario 0 --- Track loss}\label{fig:scenario0_track_loss}
+\end{figure}
+
+\begin{figure}
+\centering
+\includegraphics{Figures/plots/Scenario1_Tracking-TrackLoss.pdf}
+\caption{Scenario 1 --- Track loss}\label{fig:scenario1_track_loss}
+\includegraphics{Figures/plots/Scenario2_Tracking-TrackLoss.pdf}
+\caption{Scenario 2 --- Track loss}\label{fig:scenario2_track_loss}
+\end{figure}
+
+\begin{figure}
+\centering
+\includegraphics{Figures/plots/Scenario3_Tracking-TrackLoss.pdf}
+\caption{Scenario 3 --- Track loss}\label{fig:scenario3_track_loss}
+\includegraphics{Figures/plots/Scenario4_Tracking-TrackLoss.pdf}
+\caption{Scenario 4 --- Track loss}\label{fig:scenario4_track_loss}
+\end{figure}
+\clearpage
+
+\subsection{Tracking percentage}
+\Cref{fig:scenario0_tracking_percentage,fig:init_performance_scenario1,fig:scenario2_tracking_percentage,fig:scenario3_tracking_percentage,fig:init_performance_scenario4} show a substantial increase in tracking percentage for low \gls{Pd} and windows size when comparing the pure radar tracking with the \gls{ais} aided tracking. The difference is biggest for N=1 in all cases, but since this is an very small window size, our analysis will focus on N=3 and 6 since these seems to be the sweet spot between runtime (\Cref{fig:scenario0_tracking_runtime,fig:scenario1_tracking_runtime,fig:scenario2_tracking_runtime,fig:scenario3_tracking_runtime,fig:scenario4_tracking_runtime}) and performance. 
+
+\Cref{tab:tracking_percentage_improvement} list the improvements for the AIS scenarios compared to the baseline without AIS, all for \(\lambda_\phi = 1\cdot 10^{-5}\). From this we can see that the class of AIS equipment impacts the tracking performance more than the amount of AIS transmitters. It also shows that the gain of AIS reduces with an increased \gls{Pd} and N.
+
+\begin{table}[H]
+\centering
+\csvautotabular{{Figures/plots/Tracking_Percentage_Improvement.csv}}
+\caption{Tracking percentage improvement relative pure radar}\label{tab:tracking_percentage_improvement}
+\end{table}
 
 \begin{figure}[H]
 \centering
@@ -137,3 +185,4 @@ Cost = t_{80\%} (1 + n_{False Track})
 \includegraphics{Figures/plots/Scenario4_Tracking-TrackingPercentage.pdf}
 \caption{Scenario 4 --- Tracking percentage}\label{fig:scenario4_tracking_percentage}
 \end{figure}
+
