@@ -10,15 +10,16 @@
 	\setcounter{page}{1}
 
 	\input{tex/problem_description}
-	\cleardoublepage{}
+	\cleardoublepage{}\glsresetall{}
 
 	\input{tex/preface}
-	\cleardoublepage{}
+	\cleardoublepage{}\glsresetall{}
 	
 	\input{tex/abstract}
-	\cleardoublepage{}
+	\cleardoublepage{}\glsresetall{}
 	
 	\input{tex/sammendrag} %Abstract in norwegian
+	\cleardoublepage{}\glsresetall{}
 	
 	\tableofcontents{}
 	\clearpage{}
@@ -47,7 +48,6 @@
 	\input{tex/chapter-MHT-module} \clearpage 
 	\input{tex/chapter-results} \clearpage %##Contains ArialMT type 3 linked fonts##
 	\input{tex/chapter-discussion} \clearpage  
-	\input{tex/chapter-future-work} \clearpage  
 	\input{tex/chapter-conclusion} \clearpage  
 	\makeatletter\@openrightfalse\makeatother 
 	\input{tex/chapter-appendices} \clearpage %##Contains ArialMT type 3 linked fonts##
