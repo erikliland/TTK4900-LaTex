@@ -5,7 +5,7 @@ The performance evaluation of any tracking system is difficult since the degrees
 The second approach is used in this work based on its ability to run user defined scenarios and its perceived more realistic behaviour. 
 
 \section{Testing scheme}
-The performance evaluation of any MHT system is tedious in that it is necessary to test very many different situations to get a good understanding of how the system performs in a broad sense. The two largest factors contributing to the difficulty is the random nature of the clutter and lost detections. It is also desirable to evaluate the initialization and tracking performance under both varying environmental (external) conditions and tuning (internal) setting. We want good tracking of targets with low probability of detection in cluttered environment, and have a runtime no larger than the radar rotation period. The initialization module must be able to detect targets with probability of detection lower than unity without initializing too many false tracks into the MHT algorithm. The testing following is separated into two parts; initialization and tracking.
+The performance evaluation of any MHT system is tedious in that it is necessary to test very many different situations to get a good understanding of how the system performs in a broad sense. This is partially due to events like track loss should be rare, hence a large sample set is necessary to get a significant number of events. The two largest factors contributing to the difficulty is the random nature of the clutter and lost detections. It is also desirable to evaluate the initialization and tracking performance under both varying environmental (external) conditions and tuning (internal) setting. We want good tracking of targets with low probability of detection in cluttered environment, and have a runtime no larger than the radar rotation period. The initialization module must be able to detect targets with probability of detection lower than unity without initializing too many false tracks into the MHT algorithm. The testing following is separated into two parts; initialization and tracking.
 
 \section{Scenario}\label{sec:scenario}
 All simulations in this work is based on a generated scenario, shown in Figure~\ref{fig:test_scenario}, with black dots marking the initial time and position of the targets. The radar range is 5500 meter (\textasciitilde 3 \glspl{nm_acr}), which gives an area of surveillance of approximately 95 square km. The scenario contains 16 targets, which all starts inside the observable area of the radar. The scenario contains a mixture of fast and slow moving vessels, some with sharp turns and some almost at stand still. Table~\ref{tab:init_states} show the initial states of all targets, and the true path is generated once from these initial values.
@@ -25,7 +25,7 @@ All simulations in this work is based on a generated scenario, shown in Figure~\
 \caption{Initial states}\label{tab:init_states}
 \end{table}
 
-From this base scenario, five scenarios where generated with different AIS configuration on the vessels, see Table~\ref{tab:ais_scenarios}. The first scenario represents the baseline with only radar information available, whereas the rest have some level of AIS information. Scenario 1 adds 50\% class B AIS transmitters, and is representing a situation where all the targets are smaller vessels with some voluntarily installed AIS transceivers. In scenario 3, all vessels have AIS class B installed. This scenario represents a best case situation regarding yacht and leisure vessels from an autonomous anti collision perspective and is only realistic if AIS class B were to be mandatory for these vessel classes. Scenario 2 is the same as scenario 1, with the difference that the vessels have class A transmitters in stead of class B. This gives them higher and smarter rate of transmission (see \Cref{tab:classA_reporting_intervals,tab:classB_reporting_intervals}), which in theory should improve tracking. This scenario can be viewed as a few commercial vessels travelling in between a large group of yachts. The last scenario, where all targets are equipped with class A transmitters is the ultimate situation for any fusion tracking system. This case would be realistic in a crowded professional working area, for instance harbours, fishing areas and off-shore installations.
+From this base scenario, five scenarios were generated with different AIS configuration on the vessels, see Table~\ref{tab:ais_scenarios}. The first scenario represents the baseline with only radar information available, whereas the rest have some level of AIS information. Scenario 1 adds 50\% class B AIS transmitters, and is representing a situation where all the targets are smaller vessels with some voluntarily installed AIS transceivers. In scenario 3, all vessels have AIS class B installed. This scenario represents a best case situation regarding yacht and leisure vessels from an autonomous anti collision perspective and is only realistic if AIS class B were to be mandatory for these vessel classes. Scenario 2 is the same as scenario 1, with the difference that the vessels have class A transmitters in stead of class B. This gives them higher and smarter rate of transmission (see \Cref{tab:classA_reporting_intervals,tab:classB_reporting_intervals}), which in theory should improve tracking. This scenario can be viewed as a few commercial vessels travelling in between a large group of yachts. The last scenario, where all targets are equipped with class A transmitters is the ultimate situation for any fusion tracking system. This case would be realistic in a crowded professional working area, for instance harbours, fishing areas and off-shore installations.
 
 \Cref{fig:measurements_overlaid} show all radar measurements for an entire scenario for the different clutter level overlaid. 
 \begin{table}
@@ -107,7 +107,7 @@ When testing the tracking performance, it is desirable to remove the variable of
 \end{split}
 \end{equation}
 
-Since the targets are initialized perfectly in every situation, we are interested in how good our system is able to \emph{maintain} the tracks. We measure this by means of the Euclidean distance between the estimated and true track (\ref{eq:euclidian_distance_vector}). The first track performance metric is the track loss percentage, where a track is considered correct as long as \(\Delta P \leq \varepsilon_p\) for a given threshold. If a track is deviating more than the threshold and never returns within the threshold again, it is considered lost at the time-step when it exceeded the threshold. If the track should converge after exceeding the threshold, it is considered restored at the time-step it is returning within the limit. Tracks that deviates more than \(10\varepsilon_p\) are considered lost at the time they exceeded \(\varepsilon_p\). This two step threshold is to allow tracks to dead reckon for a while without being registered as lost, while still dismiss tracks that are deviating away from the true track.
+Since the targets are initialized perfectly in every situation, we are interested in how good our system is able to \emph{maintain} the tracks. We measure this by means of the Euclidean distance between the estimated and true track (\ref{eq:euclidian_distance_vector}). The first track performance metric is the track loss percentage, where a track is considered correct as long as \(\Delta P \leq \varepsilon_p\) for a given threshold \(\epsilon_p\). If a track is deviating more than the threshold and never returns within the threshold again, it is considered lost at the time-step when it exceeded the threshold. If the track should converge after exceeding the threshold, it is considered restored at the time-step it is returning within the limit. Tracks that deviate more than \(10\varepsilon_p\) are considered lost at the time they exceeded \(\varepsilon_p\). This two step threshold is to allow tracks to dead reckon for a while without being registered as lost, while still dismiss tracks that are deviating away from the true track.
 \begin{equation}
 	\Delta P = \| \V{p}_{track}-\V{p}_{target} \|_2
 \label{eq:euclidian_distance_vector}
@@ -135,29 +135,29 @@ From \cref{fig:scenario0_track_loss,fig:scenario1_track_loss,fig:scenario2_track
 \begin{table}[H]
 \centering
 \csvautotabular{{Figures/plots/Track_Loss_Improvement.csv}}
-\caption{Track loss improvement relative pure radar}\label{tab:track_loss_improvement}
+\caption{Track loss improvement relative pure radar. Higher values are better.}\label{tab:track_loss_improvement}
 \end{table}
 
 \begin{figure}
 \centering
 \includegraphics{Figures/plots/Scenario0_Tracking-TrackLoss.pdf}
-\caption{Scenario 0 --- Track loss}\label{fig:scenario0_track_loss}
+\caption{Scenario 0 --- Track loss. Lower values are better.}\label{fig:scenario0_track_loss}
 \end{figure}
 
 \begin{figure}
 \centering
 \includegraphics{Figures/plots/Scenario1_Tracking-TrackLoss.pdf}
-\caption{Scenario 1 --- Track loss}\label{fig:scenario1_track_loss}
+\caption{Scenario 1 --- Track loss. Lower values are better.}\label{fig:scenario1_track_loss}
 \includegraphics{Figures/plots/Scenario2_Tracking-TrackLoss.pdf}
-\caption{Scenario 2 --- Track loss}\label{fig:scenario2_track_loss}
+\caption{Scenario 2 --- Track loss. Lower values are better.}\label{fig:scenario2_track_loss}
 \end{figure}
 
 \begin{figure}
 \centering
 \includegraphics{Figures/plots/Scenario3_Tracking-TrackLoss.pdf}
-\caption{Scenario 3 --- Track loss}\label{fig:scenario3_track_loss}
+\caption{Scenario 3 --- Track loss. Lower values are better.}\label{fig:scenario3_track_loss}
 \includegraphics{Figures/plots/Scenario4_Tracking-TrackLoss.pdf}
-\caption{Scenario 4 --- Track loss}\label{fig:scenario4_track_loss}
+\caption{Scenario 4 --- Track loss. Lower values are better. The red lines are equal and behind the cyan lines.}\label{fig:scenario4_track_loss}
 \end{figure}
 \clearpage
 

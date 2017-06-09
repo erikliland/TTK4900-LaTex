@@ -73,7 +73,7 @@ All \gls{ais} messages are stamped with the \gls{utc} of transmission, and `freq
 \includegraphics[width = .9\textwidth]{Figures/out_of_order_ais.png}
 \caption{Unfiltered and filtered AIS arrival time}\label{fig:out_of_order_ais}
 \end{figure}
-One of the simplest ways of remedying this issue is to discard all messages with older timestamps that the current newest for each \gls{mmsi}. This will lead to a loss of data, which will lead to a slower AIS update period for the tracking module.
+One of the simplest ways of remedying this issue is to discard all messages with older timestamps than the current newest for each \gls{mmsi}. This will lead to a loss of data, which will lead to a slower AIS update period for the tracking module.
 
 \subsection{ID swap filtering}
 According to~\cite{Harati-Mokhtari2007}, 2\% of the received AIS messages in a data-mining study contained erroneous \gls{mmsi}. One of the errors were that many vessels transmitted messages with the same MMSI (11930446). This is the default MMSI on equipment from a specific manufacturer. Another example from the same study is two vessels which swapped IDs for a moment when they were passing, with a recovery after about 15 minutes. The latest example could be caused by simultaneous transmission or reflections, but the cause is not examined in the paper. Although much more rare that the out-of-order reception, ID swaps can occur and should be monitored by i.e. a logic testing \gls{ais} measurement innovations.

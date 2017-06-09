@@ -2,6 +2,9 @@
 
 \section*{\Huge Sammendrag}
 \addcontentsline{toc}{chapter}{Sammendrag}	
-$\\[0.5cm]$
+\hfill
+\noindent
 
-\noindent Løysinga er 42.
+For å muliggjøre sikre selvkjørende fartøy er de avhengige av systemer som kan oppfatte hva som skjer rundt dem i sanntid. Målfølgingssystemer som benytter både radar og \gls{ais} data er foretrukne i det maritime domene, fordi de har utfyllende sterke og svake sider. Denne oppgaven utvikler et målfølgingssystem som kan følge flere mål ved å bruke data fra flere radar målinger over tid fra radar montert på egen båt, assistert av \gls{ais}. Systemet er bygd opp av to hoveddeler, en logikkbasert start-algoritme og en spor-orientert fler-hypotese målfølgingsalgoritme, hvor begge bruker målinger fra radar og \gls{ais}. Målfølgingssystemet er testet på simulerte data med forskjellige interne målfølgings-, miljø- og \gls{ais}-innstillinger. 
+
+Antall spor som mistet målet sitt ble redusert med 85--94\% for vindu-størrelser på 3--9 i et støyfullt miljø hvor alle mål var utstyrt med klasse A \gls{ais} sammenlignet med målfølging basert utelukkende på radar når målene hadde en lav deteksjons-sannsynlighet på 50\%. Den totale tidsandelen målene ble fulgt økte med 43\% for små vindu-størrelser (N=3), og 8--15\% for større vindu-størrelser (N=6--9) når alle målene var utstyr med klasse A \gls{ais} sammenlignet med kun radar-målinger i er støyfullt miljø med deteksjons-sannsynlighet på 50\%.

@@ -9,7 +9,7 @@ It will be assumed throughout this thesis that radar data is processed, as outli
 
 \section{Motion Model}\label{sec:motion-model}
 \subsection{Reference frame}
-A local Cartesian NED-frame, like \gls{utm} will be used throughout this thesis, with the assumption than all input sensors are transformed to this frame (see Section~\ref{subsec:frame_conversion}). This local projection from a geodetic coordinate system to a Cartesian coordinate system is acceptable as long as the the area the system is working on is within one grid. A global geodetic frame, like WGS84 would be preferable in situations where the system tracks object over world-scale lengths but would yield non-linear equations of motion.
+A local Cartesian NED-frame, like \gls{utm} will be used throughout this thesis, with the assumption than all input sensors are transformed to this frame (see Section~\ref{subsec:frame_conversion}). This local projection from a geodetic coordinate system to a Cartesian coordinate system is acceptable as long as the area the system is working on is within one grid. A global geodetic frame, like WGS84 would be preferable in situations where the system tracks object over world-scale lengths but would yield non-linear equations of motion.
 
 \subsection{Constant velocity model}
 A target's state (\ref{eq:state_vector}) is modelled with position and velocity in a 2D Cartesian frame where the positive \(x\)-axis is pointing east and the positive \(y\)-axis is pointing north. The two latest states are the velocities in their respective direction.
